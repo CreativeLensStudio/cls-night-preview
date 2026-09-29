@@ -1193,6 +1193,20 @@ body.ready .hero .line-inner {
   will-change: transform;
 }
 
+@media (min-width: 901px) {
+  .services:not(.is-cards-live) .services-track,
+  .services:not(.is-cards-live) .panel {
+    opacity: 0 !important;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .services:not(.is-cards-live) .services-progress {
+    opacity: 0 !important;
+    visibility: hidden;
+  }
+}
+
 .services-track {
   display: flex;
   flex: 1;

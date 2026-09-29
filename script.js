@@ -169,8 +169,8 @@
   const servicesTitle = $("#services-title");
   const servicesProgress = $(".services-progress");
   const filmCaption = $(".film-caption");
-  /* First ~18% of services scroll: big title alone, then cards rise + title docks. */
-  const TYPE_SETTLE = 0.18;
+  /* Intro scroll: title alone → docks still oversized → finishes shrink with cards in. */
+  const TYPE_SETTLE = 0.22;
   const metrics = { nightTop: 0, nightH: 0, filmTop: 0, filmH: 0, svcTop: 0, svcH: 0 };
   let lastTypeTf = "";
   let typeMaxScale = 3.4;
@@ -179,6 +179,14 @@
   let typeStartX = 0;
   let typeStartY = 0;
   let cardParkY = 520;
+  let cardsLive = false;
+
+  function setCardsLive(on) {
+    if (!servicesEl) return;
+    if (cardsLive === on) return;
+    cardsLive = on;
+    servicesEl.classList.toggle("is-cards-live", on);
+  }
 
   function measureTypeScale() {
     if (!servicesTitle || !isDesktop) return;
@@ -193,21 +201,21 @@
     const vh = window.innerHeight;
     if (panel) {
       const p = panel.getBoundingClientRect();
-      typeMaxScale = Math.min(4.8, Math.max(2.6, (vw * 0.72) / w));
-      /* Start: large type mid-viewport, right-weighted like the reference. */
-      typeStartX = p.right - 48 - t.right;
-      typeStartY = vh * 0.42 - t.top;
-      /* Rest: just above top-right of the first card. */
+      typeMaxScale = Math.min(4.6, Math.max(2.8, (vw * 0.7) / w));
+      /* Start: large mid-screen type — cards are not in frame yet. */
+      typeStartX = p.right - 56 - t.right;
+      typeStartY = vh * 0.4 - t.top;
+      /* Rest: just above the top-right of the first card. */
       typeRestX = p.right - 36 - t.right;
       typeRestY = p.top - 22 - t.bottom;
-      cardParkY = Math.max(vh * 0.55, vh - p.top + 48);
+      cardParkY = Math.max(vh * 0.75, vh - p.top + 120);
     } else {
-      typeMaxScale = Math.min(4.4, Math.max(2.5, (vw * 0.72) / w));
+      typeMaxScale = Math.min(4.2, Math.max(2.6, (vw * 0.7) / w));
       typeStartX = 0;
       typeStartY = vh * 0.28;
       typeRestX = 0;
       typeRestY = 0;
-      cardParkY = vh * 0.7;
+      cardParkY = vh * 0.8;
     }
     servicesTitle.style.transform = prev;
     if (track) track.style.transform = trackPrev;
@@ -216,10 +224,10 @@
   function applyTypeSettle(settle) {
     if (!servicesTitle) return;
     const t = Math.min(1, Math.max(0, settle));
-    /* Position docks earlier; scale keeps going after it arrives. */
-    const move = Math.min(1, t / 0.72);
-    const moveE = 1 - Math.pow(1 - move, 1.55);
-    const scaleE = 1 - Math.pow(1 - t, 1.35);
+    /* Arrive at the resting spot around 62% — keep shrinking after that. */
+    const move = Math.min(1, t / 0.62);
+    const moveE = 1 - Math.pow(1 - move, 1.4);
+    const scaleE = 1 - Math.pow(1 - t, 1.15);
     const scale = typeMaxScale - (typeMaxScale - 1) * scaleE;
     const x = typeStartX + (typeRestX - typeStartX) * moveE;
     const y = typeStartY + (typeRestY - typeStartY) * moveE;
@@ -565,10 +573,14 @@
     laneLock = 0;
     lastTrackShift = 1e9;
     lastTypeTf = "";
+    cardsLive = false;
     if (servicesTitle) servicesTitle.style.transform = "";
     if (track) track.style.opacity = "";
     if (servicesProgress) servicesProgress.style.opacity = "";
-    if (services) services.classList.remove("is-hot");
+    if (services) {
+      services.classList.remove("is-hot");
+      services.classList.remove("is-cards-live");
+    }
   }
 
   const panelKeys = ["", "", "", ""];
@@ -584,7 +596,10 @@
         resetServicesMotion();
         hsActive = false;
       }
-      if (isDesktop && !reduceMotion && rect.top > vh) applyTypeSettle(0);
+      if (isDesktop && !reduceMotion && rect.top > vh) {
+        applyTypeSettle(0);
+        setCardsLive(false);
+      }
       return false;
     }
 
@@ -608,9 +623,14 @@
     const total = Math.max(1, rect.height - vh);
     const raw = -rect.top / total;
     const settle = raw <= 0 ? 0 : Math.min(1, raw / TYPE_SETTLE);
-    /* Cards rise with the title travel; title keeps shrinking after it docks. */
-    const cardIn = Math.min(1, Math.max(0, (settle - 0.12) / 0.58));
-    const cardE = 1 - Math.pow(1 - cardIn, 1.45);
+    /*
+      0–40%: title alone, shrinking toward the dock
+      40–62%: cards rise as title arrives still oversized
+      62–100%: title finishes shrinking in its resting spot
+    */
+    const cardIn = Math.min(1, Math.max(0, (settle - 0.4) / 0.22));
+    const cardE = 1 - Math.pow(1 - cardIn, 1.35);
+    setCardsLive(cardE > 0.02);
     if (layoutDirty) {
       measureServices();
       measureTypeScale();
