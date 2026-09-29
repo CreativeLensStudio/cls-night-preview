@@ -1156,11 +1156,24 @@ body.ready .hero .line-inner {
   height: 100svh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: flex-end;
-  padding: calc(var(--header) + 2rem) var(--gutter) 8vh;
+  justify-content: flex-end;
+  align-items: stretch;
+  padding: 0 var(--gutter) 7vh;
   pointer-events: none;
-  visibility: hidden;
+}
+
+.type-hold-pin.is-parked {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 30;
+  height: 100vh;
+  height: 100svh;
+}
+
+@media (min-width: 901px) {
+  .services-head h2 {
+    visibility: hidden;
+  }
 }
 
 .type-hold-pin .eyebrow {
