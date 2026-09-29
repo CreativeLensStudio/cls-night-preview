@@ -180,6 +180,11 @@ html.is-night .env {
   color: var(--paper-night);
 }
 
+html.is-night .env-lens-b,
+html.is-night .env-lens-c {
+  opacity: 0;
+}
+
 html.is-night .hero-top .eyebrow {
   color: var(--paper-night);
 }
@@ -554,6 +559,11 @@ body.ready:not(.entering) .page {
 .env-lens-a { width: 18vmax; height: 18vmax; right: 4vmax; top: 18vh; }
 .env-lens-b { width: 11vmax; height: 11vmax; left: 5vmax; top: 58vh; }
 .env-lens-c { width: 7vmax; height: 7vmax; right: 14vmax; bottom: 10vh; }
+
+.env-lens-b,
+.env-lens-c {
+  transition: opacity 0.7s ease;
+}
 
 /* ------------------------------------------------------------------
    Header / navigation
