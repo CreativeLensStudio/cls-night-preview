@@ -243,7 +243,9 @@
       setTypeLanded(false);
       return;
     }
-    const move = Math.min(1, p / 0.58);
+    /* Position docks early; scale keeps going after it's in place. */
+    const dockAt = 0.62;
+    const move = Math.min(1, p / dockAt);
     const moveE = 1 - Math.pow(1 - move, 1.15);
     const scaleE = 1 - Math.pow(1 - p, 1.05);
     const endScale = typeRest.w / typeNatW;
@@ -292,23 +294,25 @@
     const total = Math.max(1, typeHold.offsetHeight - vh);
     const raw = Math.min(1, Math.max(0, -rect.top / total));
     if (!typeNatW || typeNatW < 2 || raw < 0.22) measureTypeLayout();
-    const progress = Math.min(1, Math.max(0, (raw - 0.22) / 0.78));
 
-    /* Keep the line parked at rest until the cards pin is actually on screen. */
-    if (raw >= 1 || rect.bottom <= 0) {
-      if (pinReady) {
-        setTypeLanded(true);
-        return false;
-      }
-      applyTypeHold(1);
-      setTypeLanded(false);
-      return true;
+    /* Hold phase covers most of the move/shrink; approach finishes the last scale. */
+    const holdEnd = 0.72;
+    const holdP = Math.min(1, Math.max(0, (raw - 0.22) / 0.78));
+    let progress;
+    if (raw < 1 && rect.bottom > 0) {
+      progress = holdP * holdEnd;
+    } else if (!pinReady) {
+      const approach = 1 - Math.min(1, Math.max(0, servicesTop / vh));
+      progress = holdEnd + (1 - holdEnd) * approach;
+    } else {
+      progress = 1;
     }
 
-    if (progress >= 0.995 && pinReady) {
+    if (pinReady && progress >= 0.995) {
       setTypeLanded(true);
       return false;
     }
+
     applyTypeHold(progress);
     setTypeLanded(false);
     return progress > 0 || !pinReady;
