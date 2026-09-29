@@ -235,15 +235,21 @@
   }
 
   function envStep() {
-    if (reduceMotion || !envSlow || !envFast || nightOn || analyticsOn) {
+    if (reduceMotion) return false;
+
+    env.x += (env.tx - env.x) * 0.1;
+    env.y += (env.ty - env.y) * 0.1;
+    const moving =
+      Math.abs(env.tx - env.x) > 0.002 || Math.abs(env.ty - env.y) > 0.002;
+
+    if (nightOn || analyticsOn || !envSlow || !envFast) {
       if (envHot && envRoot) {
         envHot = false;
         envRoot.classList.remove("is-hot");
       }
-      return false;
+      return moving || lastAnalyticsT > 0.04;
     }
-    env.x += (env.tx - env.x) * 0.1;
-    env.y += (env.ty - env.y) * 0.1;
+
     const sy = window.scrollY * 0.012;
     const sx = (env.x * 8 - sy * 0.15) | 0;
     const sy1 = (env.y * 6 - sy * 0.35) | 0;
@@ -259,8 +265,6 @@
       lastFast = fast;
       envFast.style.transform = fast;
     }
-    const moving =
-      Math.abs(env.tx - env.x) > 0.002 || Math.abs(env.ty - env.y) > 0.002;
     if (moving !== envHot && envRoot) {
       envHot = moving;
       envRoot.classList.toggle("is-hot", moving);
@@ -579,6 +583,7 @@
     else if (raw > 1) analyticsT = Math.max(0, 1 - (raw - 1) / 0.35);
     else analyticsT = Math.min(1, Math.max(0, (pos - 2.05) / 0.85));
     setAnalyticsChrome(analyticsT);
+    updateAnalyticsParallax();
 
     for (let i = 0; i < panels.length; i++) {
       const dist = Math.abs(pos - i);
