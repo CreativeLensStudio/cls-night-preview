@@ -1146,22 +1146,18 @@ body.ready .hero .line-inner {
 
 .type-hold {
   position: relative;
-  height: 180vh;
-  margin-top: -88vh;
+  height: 100vh;
+  height: 100svh;
   z-index: 5;
 }
 
 .type-hold-pin {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 30;
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
-  align-items: stretch;
-  padding: 0 var(--gutter) 8vh;
+  justify-content: center;
+  padding: 0 var(--gutter);
   pointer-events: none;
 }
 
@@ -1174,7 +1170,6 @@ body.ready .hero .line-inner {
 .type-hold-pin .eyebrow {
   margin: 0 0 1.5rem;
   align-self: flex-start;
-  opacity: 0;
 }
 
 .type-hold-title {
@@ -1190,7 +1185,6 @@ body.ready .hero .line-inner {
   text-wrap: nowrap;
   max-width: none;
   color: var(--paper-night);
-  opacity: 0;
 }
 
 html.is-night .type-hold-title {

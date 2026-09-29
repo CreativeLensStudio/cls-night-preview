@@ -180,39 +180,7 @@
   }
 
   function titleFocusStep() {
-    const title = typeHold ? typeHold.querySelector(".type-hold-title") : null;
-    const eyebrow = typeHold ? typeHold.querySelector(".eyebrow") : null;
-    if (!typeHold || !title) return false;
-    if (!isDesktop || reduceMotion) {
-      title.style.opacity = "";
-      title.style.filter = "";
-      if (eyebrow) {
-        eyebrow.style.opacity = "";
-        eyebrow.style.filter = "";
-      }
-      return false;
-    }
-    const rect = typeHold.getBoundingClientRect();
-    const vh = window.innerHeight;
-    let amount = 0;
-    if (rect.bottom > 0 && rect.top < vh) {
-      const enter = 1 - Math.min(1, Math.max(0, rect.top / (vh * 0.85)));
-      const leave = rect.bottom < vh * 1.15 ? Math.min(1, Math.max(0, rect.bottom / (vh * 0.7))) : 1;
-      amount = Math.min(enter, leave);
-    }
-    const eased = amount * amount * (3 - 2 * amount);
-    const blur = (1 - eased) * 16;
-    const next = `${eased.toFixed(3)}|${blur.toFixed(1)}`;
-    if (next === lastTitleFocus) return eased > 0.004 && eased < 0.996;
-    lastTitleFocus = next;
-    const filter = blur < 0.3 ? "none" : `blur(${blur.toFixed(1)}px)`;
-    title.style.opacity = eased.toFixed(3);
-    title.style.filter = filter;
-    if (eyebrow) {
-      eyebrow.style.opacity = eased.toFixed(3);
-      eyebrow.style.filter = filter;
-    }
-    return eased > 0.004 && eased < 0.996;
+    return false;
   }
 
   function measureMetrics() {
