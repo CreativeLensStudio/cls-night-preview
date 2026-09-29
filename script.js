@@ -296,14 +296,19 @@
     const head = document.querySelector(".services-head");
     const pin = typeHold ? typeHold.querySelector(".type-hold-pin") : null;
     if (!head || !pin) return;
-    const blend = Math.min(1, Math.max(0, (progress - 0.93) / 0.07));
-    if (blend <= 0.001) {
+    /* One slow blink across the seat, then it holds solid. */
+    const t = Math.min(1, Math.max(0, (progress - 0.74) / 0.26));
+    if (t <= 0.001) {
       head.style.opacity = "";
       pin.style.opacity = "";
       return;
     }
-    pin.style.opacity = (1 - blend).toFixed(3);
-    head.style.opacity = blend.toFixed(3);
+    const blink = Math.sin(Math.min(1, t / 0.72) * Math.PI);
+    const seat = Math.min(1, Math.max(0, (t - 0.42) / 0.58));
+    const seatE = seat * seat * (3 - 2 * seat);
+    const pinOpacity = (1 - blink * 0.55) * (1 - seatE);
+    pin.style.opacity = pinOpacity.toFixed(3);
+    head.style.opacity = seatE.toFixed(3);
   }
 
   function typeHoldStep() {

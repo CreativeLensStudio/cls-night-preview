@@ -1240,7 +1240,7 @@ html.is-night .type-hold-title {
 }
 
 .services-head h2 {
-  font-size: clamp(1.9rem, 2.66vw, 3.45rem);
+  font-size: clamp(1.75rem, 3.5vw, 6.75rem);
   font-weight: 800;
   text-align: right;
   white-space: nowrap;
