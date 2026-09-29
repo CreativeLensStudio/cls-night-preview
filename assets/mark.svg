@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="Creative Lens Studio">
+  <title>Creative Lens Studio</title>
+  <circle cx="50" cy="50" r="46" stroke="currentColor" stroke-width="4"/>
+  <g stroke="currentColor" stroke-width="3.2" stroke-linecap="round">
+    <path d="M86 50 L37.69 83.83"/>
+    <path d="M68 81.18 L14.55 56.25"/>
+    <path d="M32 81.18 L26.86 22.42"/>
+    <path d="M14 50 L62.31 16.17"/>
+    <path d="M32 18.82 L85.45 43.75"/>
+    <path d="M68 18.82 L73.14 77.58"/>
+  </g>
+  <circle cx="50" cy="50" r="6" fill="#ff4a1a"/>
+</svg>

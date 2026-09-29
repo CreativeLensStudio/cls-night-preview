@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#f6f4ef" />
+    <title>Creative Lens Studio — Brands that move business forward</title>
+    <meta
+      name="description"
+      content="We build brands that move business forward. On-location film, websites, and campaigns from one studio in Aberdeen, WA."
+    />
+    <link rel="icon" type="image/svg+xml" href="assets/mark.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;800&family=Instrument+Sans:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="is-loading">
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <!-- ============================================================
+         SPLASH — the aperture draws itself, the blades twist open and
+         the page is revealed through the widening iris.
+         ============================================================ -->
+    <div class="splash" id="splash" aria-hidden="true">
+      <div class="splash-mark">
+        <svg class="splash-logo" viewBox="0 0 100 100" fill="none" focusable="false">
+          <circle pathLength="1" class="s-ring" cx="50" cy="50" r="46" stroke="currentColor" stroke-width="3"/>
+          <g class="s-blades" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+            <path pathLength="1" class="s-blade" d="M86 50 L37.69 83.83"/>
+            <path pathLength="1" class="s-blade" d="M68 81.18 L14.55 56.25"/>
+            <path pathLength="1" class="s-blade" d="M32 81.18 L26.86 22.42"/>
+            <path pathLength="1" class="s-blade" d="M14 50 L62.31 16.17"/>
+            <path pathLength="1" class="s-blade" d="M32 18.82 L85.45 43.75"/>
+            <path pathLength="1" class="s-blade" d="M68 18.82 L73.14 77.58"/>
+          </g>
+          <circle class="s-pupil" cx="50" cy="50" r="6" fill="#ff4a1a"/>
+        </svg>
+        <p class="splash-word"><span>Creative</span><span>Lens</span><span>Studio</span></p>
+      </div>
+      <button class="splash-skip" type="button" id="splash-skip">Skip</button>
+    </div>
+
+    <!-- ============================================================
+         EDGE ENVIRONMENT — glass lens elements and perspective rules
+         around the borders, masked out of the centre, mouse parallax.
+         ============================================================ -->
+    <div class="env" id="env" aria-hidden="true">
+      <div class="env-scene">
+        <div class="env-layer" data-depth="0.3"><span class="env-wash env-wash-a"></span></div>
+        <div class="env-layer" data-depth="0.5"><span class="env-wash env-wash-b"></span></div>
+        <div class="env-layer" data-depth="0.9">
+          <svg class="env-rules env-rules-tl" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M0 40 L400 200 M0 120 L400 220 M0 200 L400 240 M40 0 L200 400 M120 0 L220 400 M200 0 L240 400"/>
+          </svg>
+          <svg class="env-rules env-rules-br" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M400 360 L0 200 M400 280 L0 180 M400 200 L0 160 M360 400 L200 0 M280 400 L180 0 M200 400 L160 0"/>
+          </svg>
+        </div>
+        <div class="env-layer" data-depth="1.5"><span class="env-lens env-lens-a"></span></div>
+        <div class="env-layer" data-depth="2.1"><span class="env-lens env-lens-b"></span></div>
+        <div class="env-layer" data-depth="2.8"><span class="env-lens env-lens-c"></span></div>
+      </div>
+    </div>
+
+    <div class="night-veil" id="night-veil" aria-hidden="true"></div>
+    <div class="analytics-veil" id="analytics-veil" aria-hidden="true"></div>
+
+    <div class="page" id="page">
+      <header class="site-header" id="header">
+        <div class="header-inner">
+          <a class="brand" href="#top" aria-label="Creative Lens Studio — home">
+            <svg class="brand-mark" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+              <circle cx="50" cy="50" r="46" stroke="currentColor" stroke-width="5"/>
+              <g stroke="currentColor" stroke-width="4" stroke-linecap="round">
+                <path d="M86 50 L37.69 83.83"/><path d="M68 81.18 L14.55 56.25"/><path d="M32 81.18 L26.86 22.42"/>
+                <path d="M14 50 L62.31 16.17"/><path d="M32 18.82 L85.45 43.75"/><path d="M68 18.82 L73.14 77.58"/>
+              </g>
+              <circle cx="50" cy="50" r="7" fill="#ff4a1a"/>
+            </svg>
+            <span class="brand-name">Creative Lens<br />Studio</span>
+          </a>
+
+          <nav class="site-nav" id="site-nav" aria-label="Primary">
+            <a href="#work"><span>Work</span></a>
+            <a href="#services"><span>Services</span></a>
+            <a href="#crew"><span>Crew</span></a>
+            <a href="#contact"><span>Contact</span></a>
+          </nav>
+
+          <a class="pill pill-solid header-cta" href="#contact" data-magnetic>
+            <span>Start a project</span>
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M9 6h9v9"/></svg>
+          </a>
+
+          <button class="pill menu-btn" type="button" id="nav-toggle" aria-expanded="false" aria-controls="menu">
+            <span class="menu-btn-label" data-open="Menu" data-close="Close">Menu</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="menu" id="menu" hidden>
+        <nav aria-label="Primary (menu)">
+          <a href="#work" style="--i: 0"><small>01</small>Work</a>
+          <a href="#services" style="--i: 1"><small>02</small>Services</a>
+          <a href="#results" style="--i: 2"><small>03</small>Results</a>
+          <a href="#crew" style="--i: 3"><small>04</small>Crew</a>
+          <a href="#contact" style="--i: 4"><small>05</small>Contact</a>
+        </nav>
+        <div class="menu-foot">
+          <a href="tel:+13606605267">360-660-5267</a>
+          <span>Aberdeen, WA</span>
+        </div>
+      </div>
+
+      <main id="main">
+        <!-- ============================== HERO ============================== -->
+        <section class="hero" id="top" aria-labelledby="hero-title">
+          <div class="hero-inner">
+            <div class="hero-top">
+              <p class="eyebrow" data-reveal>Film · Web · Advertising — from one studio</p>
+              <div class="badge" aria-hidden="true">
+                <svg viewBox="0 0 120 120">
+                  <defs><path id="badge-circle" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
+                  <text><textPath href="#badge-circle">Shoot · Build · Advertise · Shoot · Build · Advertise · </textPath></text>
+                </svg>
+                <span class="badge-dot"></span>
+              </div>
+            </div>
+
+            <h1 id="hero-title" class="display">
+              <span class="line"><span class="line-inner">Brands that</span></span>
+              <span class="line line-2"><span class="line-inner">move business</span></span>
+              <span class="line line-3"><span class="line-inner"><em>forward.</em></span></span>
+            </h1>
+
+            <div class="hero-foot">
+              <p class="lede" data-reveal style="--d: 0.5s">
+                The film, the website, and the campaign — designed as one piece by the people who make it.
+                For business owners who want to be understood at a glance.
+              </p>
+              <div class="hero-actions" data-reveal style="--d: 0.62s">
+                <button class="pill pill-solid pill-lg" type="button" data-open-film data-magnetic>
+                  <span>Watch the film</span>
+                  <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="currentColor" d="M8.2 5.6v12.8L19.4 12 8.2 5.6z"/></svg>
+                </button>
+                <a class="pill pill-line pill-lg" href="#services" data-magnetic>
+                  <span>What we manage</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Night zone: film + manifesto lerp the page into a near-black palette. -->
+        <div class="night-zone" id="night-zone">
+        <!-- ============================== FILM ============================== -->
+        <!-- A lens-shaped frame that opens into a full picture as you scroll. -->
+        <section class="film" id="work" aria-labelledby="film-title">
+          <h2 id="film-title" class="sr-only">The studio film</h2>
+          <button class="film-stage" id="film-stage" type="button" data-open-film aria-label="Play the studio film">
+            <div class="film-poster" id="film-poster">
+              <span class="film-poster-word">Two minutes on how we work.</span>
+              <span class="film-poster-ring"></span>
+            </div>
+            <video class="film-preview" id="film-preview" muted playsinline loop preload="metadata" aria-hidden="true" tabindex="-1">
+              <source src="assets/intro.mp4" type="video/mp4" />
+            </video>
+            <span class="film-play" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="30" height="30"><path fill="currentColor" d="M8.2 5.6v12.8L19.4 12 8.2 5.6z"/></svg>
+            </span>
+          </button>
+          <div class="section-inner film-caption" data-reveal>
+            <p class="eyebrow">The studio film</p>
+            <p>From the first frame to the last click — brand, site, ads, and tracking kept in the same hands.</p>
+          </div>
+        </section>
+
+        <!-- ============================== MANIFESTO ============================== -->
+        <section class="manifesto" id="about" aria-labelledby="manifesto-title">
+          <div class="section-inner manifesto-grid">
+            <p class="manifesto-num" aria-hidden="true">01</p>
+            <div>
+              <p class="eyebrow" data-reveal>Who we are</p>
+              <h2 id="manifesto-title" class="display-2 blur-words" data-words>
+                Trust comes from design, not explanation.
+              </h2>
+              <p class="manifesto-copy" data-reveal style="--d: 0.25s">
+                Business owners don’t need more noise. They need one team that learns the trade, shapes the
+                identity, and carries it through every ad, every page, and every room a customer walks into.
+              </p>
+            </div>
+          </div>
+        </section>
+        </div>
+
+        <!-- ============================== SERVICES — HORIZONTAL ============================== -->
+        <section class="services" id="services" aria-labelledby="services-title">
+          <div class="services-pin">
+            <div class="services-head">
+              <p class="eyebrow">What we manage</p>
+              <h2 id="services-title">Four disciplines. One studio.</h2>
+            </div>
+
+            <div class="services-track" id="services-track">
+              <article class="panel panel-1" data-panel>
+                <span class="panel-bignum" aria-hidden="true">1</span>
+                <p class="panel-num">01 — Brand</p>
+                <h3>The identity,<br />photographed.</h3>
+                <ul>
+                  <li>Professional photography &amp; portfolio</li>
+                  <li>Commercial ad shoots</li>
+                  <li>Retouching for site, ads, and print</li>
+                </ul>
+              </article>
+
+              <article class="panel panel-2" data-panel>
+                <span class="panel-bignum" aria-hidden="true">2</span>
+                <p class="panel-num">02 — Website</p>
+                <h3>Built to convert.<br />Kept secure.</h3>
+                <ul>
+                  <li>Design &amp; build, with our own photography</li>
+                  <li>Landing pages for every campaign</li>
+                  <li>SEO, updates, security, and management</li>
+                </ul>
+              </article>
+
+              <article class="panel panel-3" data-panel>
+                <span class="panel-bignum" aria-hidden="true">3</span>
+                <p class="panel-num">03 — Advertising</p>
+                <h3>Campaigns that<br />actually launch.</h3>
+                <ul>
+                  <li>Storyboarded film with the full creative team</li>
+                  <li>Full-package audience targeting</li>
+                  <li>Five layers of creative testing</li>
+                </ul>
+              </article>
+
+              <article class="panel panel-4" data-panel>
+                <span class="panel-bignum" aria-hidden="true">4</span>
+                <p class="panel-num">04 — Analytics</p>
+                <h3>Analytics you can<br /><em>truly act on.</em></h3>
+                <ul>
+                  <li>Leads, conversion rate, acquisition cost</li>
+                  <li>Which ads and audiences perform</li>
+                  <li>Where to move the spend next</li>
+                </ul>
+              </article>
+            </div>
+
+            <div class="services-progress" aria-hidden="true">
+              <div class="services-ticks" id="services-ticks">
+                <span class="is-on"></span><span></span><span></span><span></span>
+              </div>
+              <span class="services-progress-count"><b id="services-index">01</b> / 04</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================== STATS — sticky stack ============================== -->
+        <!--
+          Each statistic takes the full viewport and stacks over the last.
+          120+ and 94% are placeholders until real figures are confirmed:
+          edit data-count / data-suffix and the label.
+        -->
+        <section class="stats" id="results" aria-labelledby="stats-title">
+          <h2 id="stats-title" class="sr-only">By the numbers</h2>
+
+          <div class="stat stat-ink">
+            <div class="stat-inner">
+              <p class="eyebrow">By the numbers</p>
+              <p class="stat-num"><span data-count="4">0</span></p>
+              <p class="stat-label">Specialists. One studio.</p>
+            </div>
+          </div>
+          <div class="stat stat-orange">
+            <div class="stat-inner">
+              <p class="eyebrow">By the numbers</p>
+              <p class="stat-num"><span data-count="24" data-suffix="/7">0</span></p>
+              <p class="stat-label">Available to the businesses we work with.</p>
+            </div>
+          </div>
+          <div class="stat stat-lime">
+            <div class="stat-inner">
+              <p class="eyebrow">By the numbers</p>
+              <p class="stat-num"><span data-count="120" data-suffix="+">0</span></p>
+              <p class="stat-label">Shoots, sites, and campaigns delivered.</p>
+            </div>
+          </div>
+          <div class="stat stat-paper">
+            <div class="stat-inner">
+              <p class="eyebrow">By the numbers</p>
+              <p class="stat-num"><span data-count="94" data-suffix="%">0</span></p>
+              <p class="stat-label">Of clients stay with us year over year.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================== CREW ============================== -->
+        <section class="crew" id="crew" aria-labelledby="crew-title">
+          <div class="section-inner crew-head" data-reveal>
+            <p class="eyebrow">The crew</p>
+            <h2 id="crew-title" class="display-2">The people who make the work.</h2>
+          </div>
+
+          <!-- Add <p class="crew-name"> above the role to show names. -->
+          <div class="crew-row" id="crew-row">
+            <article class="crew-card" style="--i: 0">
+              <div class="crew-frame">
+                <img src="assets/team/photographer.png" alt="Portrait of the studio photographer" width="768" height="1024" loading="lazy" decoding="async" />
+              </div>
+              <div class="crew-caption">
+                <h3>Photographer</h3>
+                <p class="crew-role">Brand &amp; Creative</p>
+                <p class="crew-desc">Shapes the identity in stills — the portfolio, the ads, the rooms.</p>
+              </div>
+            </article>
+            <article class="crew-card" style="--i: 1">
+              <div class="crew-frame">
+                <img src="assets/team/videographer.png" alt="Portrait of the studio videographer" width="768" height="1024" loading="lazy" decoding="async" />
+              </div>
+              <div class="crew-caption">
+                <h3>Videographer</h3>
+                <p class="crew-role">Film &amp; Advertising</p>
+                <p class="crew-desc">Directs the film and the ad, on location, in the business.</p>
+              </div>
+            </article>
+            <article class="crew-card" style="--i: 2">
+              <div class="crew-frame">
+                <img src="assets/team/editor.png" alt="Portrait of the studio editor" width="768" height="1024" loading="lazy" decoding="async" />
+              </div>
+              <div class="crew-caption">
+                <h3>Editor</h3>
+                <p class="crew-role">Cut &amp; Retouch</p>
+                <p class="crew-desc">Makes every frame land — the cut, the colour, the finish.</p>
+              </div>
+            </article>
+            <article class="crew-card" style="--i: 3">
+              <div class="crew-frame">
+                <img src="assets/team/designer.png" alt="Portrait of the studio designer" width="768" height="1024" loading="lazy" decoding="async" />
+              </div>
+              <div class="crew-caption">
+                <h3>Designer</h3>
+                <p class="crew-role">Web &amp; Product</p>
+                <p class="crew-desc">Builds the site that carries it all, and keeps it converting.</p>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- ============================== CONTACT ============================== -->
+        <section class="contact" id="contact" aria-labelledby="contact-title">
+          <div class="section-inner contact-grid">
+            <div>
+              <p class="eyebrow" data-reveal>Start a conversation</p>
+              <h2 id="contact-title" class="display contact-title" data-reveal style="--d: 0.1s">Let’s<br />talk.</h2>
+              <a class="phone-block" href="tel:+13606605267" data-reveal style="--d: 0.25s"><span>360-660-5267</span></a>
+              <p class="phone-note" data-reveal style="--d: 0.3s">Available 24/7 · Aberdeen, WA</p>
+            </div>
+
+            <form class="contact-form" id="contact-form" novalidate data-reveal style="--d: 0.2s">
+              <p class="form-lede">Tell us the business, and what you want a person to feel.</p>
+              <label><span>Name</span><input name="name" type="text" autocomplete="name" required /></label>
+              <label><span>The business</span><input name="business" type="text" autocomplete="organization" required /></label>
+              <label><span>Telephone or email</span><input name="reach" type="text" autocomplete="email" required /></label>
+              <label><span>What should we know</span><textarea name="note" rows="3" placeholder="The rooms, the town, what the film must do."></textarea></label>
+              <button class="pill pill-ink pill-lg" type="submit" data-magnetic>
+                <span>Send the note</span>
+                <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M9 6h9v9"/></svg>
+              </button>
+              <p class="form-status" id="form-status" role="status"></p>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <div class="section-inner footer-grid">
+          <a class="footer-phone" href="tel:+13606605267">360-660-5267</a>
+          <nav class="footer-nav" aria-label="Footer">
+            <a href="#work">Work</a>
+            <a href="#services">Services</a>
+            <a href="#results">Results</a>
+            <a href="#crew">Crew</a>
+            <a href="#contact">Contact</a>
+          </nav>
+          <p class="footer-tag">Shoot. Build. Advertise.</p>
+          <p class="fine">&copy; <span id="year"></span> Creative Lens Studio · Aberdeen, WA</p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- ============================== LIGHTBOX ============================== -->
+    <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Studio film">
+      <button class="lightbox-close" type="button" id="lightbox-close" aria-label="Close"><span></span><span></span></button>
+      <div class="lightbox-frame">
+        <video id="film-video" controls playsinline preload="metadata">
+          <source src="assets/intro.mp4" type="video/mp4" />
+        </video>
+        <div class="lightbox-empty" id="lightbox-empty" hidden>
+          <p class="eyebrow">Studio film</p>
+          <p>The film isn’t in place yet. Drop <code>intro.mp4</code> into <code>site-experimental/assets/</code> — or preview one now.</p>
+          <label class="pill pill-line btn-file">
+            <span>Preview a local file</span>
+            <input id="film-input" type="file" accept="video/*" />
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="cursor-chip" id="cursor-chip" aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M8.2 5.6v12.8L19.4 12 8.2 5.6z"/></svg>
+      <span>Play</span>
+    </div>
+
+    <script src="script.js" defer></script>
+  </body>
+</html>
