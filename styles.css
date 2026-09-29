@@ -1177,11 +1177,16 @@ body.ready .hero .line-inner {
 }
 
 .services-head h2 {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 5;
   font-size: clamp(1.4rem, 2.4vw, 2.2rem);
   font-weight: 800;
   text-align: right;
   white-space: nowrap;
   transform-origin: right top;
+  pointer-events: none;
 }
 
 .services.is-hot .services-head h2 {
@@ -1971,9 +1976,11 @@ html.is-analytics .services-progress {
   }
 
   .services-head h2 {
+    position: static;
     white-space: normal;
     text-align: left;
     transform: none !important;
+    pointer-events: auto;
   }
 
   .services-track {

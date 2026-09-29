@@ -169,41 +169,48 @@
   const servicesTitle = $("#services-title");
   const servicesProgress = $(".services-progress");
   const filmCaption = $(".film-caption");
-  const TYPE_SETTLE = 0.1237;
+  const TYPE_SETTLE = 0.15;
   const metrics = { nightTop: 0, nightH: 0, filmTop: 0, filmH: 0, svcTop: 0, svcH: 0 };
   let lastTypeTf = "";
   let typeMaxScale = 3.4;
   let typeRestH = 36;
   let typeRestX = 0;
   let typeRestY = 0;
+  let typeStartX = 0;
+  let typeStartY = 0;
 
   function measureTypeScale() {
     if (!servicesTitle || !isDesktop) return;
     const prev = servicesTitle.style.transform;
     servicesTitle.style.transform = "none";
-    const w = servicesTitle.offsetWidth;
-    const maxW = window.innerWidth - 120;
-    typeMaxScale = Math.min(4.4, Math.max(2.5, (maxW * 0.88) / Math.max(1, w)));
+    const w = Math.max(1, servicesTitle.offsetWidth);
     typeRestH = Math.max(24, servicesTitle.offsetHeight);
+    const t = servicesTitle.getBoundingClientRect();
     const panel = document.querySelector("[data-panel]");
+    const vw = window.innerWidth;
     if (panel) {
-      const t = servicesTitle.getBoundingClientRect();
       const p = panel.getBoundingClientRect();
+      const overlayW = Math.min(p.width - 72, vw * 0.86);
+      typeMaxScale = Math.min(5.2, Math.max(2.8, overlayW / w));
+      typeStartX = p.right - 36 - t.right;
+      typeStartY = p.top + Math.min(40, p.height * 0.06) - t.top;
       typeRestX = p.right - 36 - t.right;
-      typeRestY = p.top - 18 - t.bottom;
+      typeRestY = p.top - 20 - t.bottom;
+    } else {
+      typeMaxScale = Math.min(4.4, Math.max(2.5, (vw * 0.86) / w));
+      typeStartX = 0;
+      typeStartY = window.innerHeight * 0.22;
     }
     servicesTitle.style.transform = prev;
   }
 
   function applyTypeSettle(settle, vh) {
     if (!servicesTitle) return;
-    const e = 1 - Math.pow(1 - Math.min(1, Math.max(0, settle)), 1.7);
+    const held = Math.min(1, Math.max(0, (settle - 0.14) / 0.86));
+    const e = 1 - Math.pow(1 - held, 1.85);
     const scale = typeMaxScale - (typeMaxScale - 1) * e;
-    const scaledH = typeRestH * scale;
-    const maxStartY = Math.max(8, vh * 0.9 - scaledH - 80);
-    const startY = Math.min(vh * 0.3, maxStartY);
-    const x = e * typeRestX;
-    const y = (1 - e) * startY + e * typeRestY;
+    const x = typeStartX + (typeRestX - typeStartX) * e;
+    const y = typeStartY + (typeRestY - typeStartY) * e;
     const next = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale3d(${scale.toFixed(3)}, ${scale.toFixed(3)}, 1)`;
     if (next === lastTypeTf) return;
     lastTypeTf = next;
@@ -700,15 +707,9 @@
       const dist = Math.abs(pos - i);
       const t = Math.min(1, dist);
       const s = t * t * (3 - 2 * t);
-      let scale = 1 - 0.32 * s;
-      let y = (42 * s) | 0;
-      let opacity = 1 - 0.2 * s;
-      if (settle < 0.999) {
-        const grow = 0.82 + 0.18 * enter;
-        scale *= grow;
-        y += ((1 - enter) * 96) | 0;
-        opacity *= 0.25 + 0.75 * enter;
-      }
+      const scale = 1 - 0.32 * s;
+      const y = (42 * s) | 0;
+      const opacity = 1 - 0.2 * s;
       const key = `${scale.toFixed(3)}|${y}|${opacity.toFixed(2)}`;
       if (panelKeys[i] === key) continue;
       panelKeys[i] = key;
