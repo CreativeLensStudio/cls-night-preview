@@ -169,72 +169,95 @@
   const servicesTitle = $("#services-title");
   const servicesProgress = $(".services-progress");
   const filmCaption = $(".film-caption");
-  /* Intro scroll: title alone → docks still oversized → finishes shrink with cards in. */
-  const TYPE_SETTLE = 0.22;
-  const metrics = { nightTop: 0, nightH: 0, filmTop: 0, filmH: 0, svcTop: 0, svcH: 0 };
+  const typeHold = $("#type-hold");
+  const typeHoldTitle = $("#type-hold-title");
+  const root = document.documentElement;
+  const metrics = { nightTop: 0, nightH: 0, filmTop: 0, filmH: 0, svcTop: 0, svcH: 0, typeTop: 0, typeH: 0 };
   let lastTypeTf = "";
-  let typeMaxScale = 3.4;
-  let typeRestX = 0;
-  let typeRestY = 0;
-  let typeStartX = 0;
-  let typeStartY = 0;
-  let cardParkY = 520;
-  let cardsLive = false;
+  let typeLanded = false;
+  let typeNatW = 1;
+  let typeStart = { x: 0, y: 0 };
+  let typeRest = { x: 0, y: 0, w: 1 };
 
-  function setCardsLive(on) {
-    if (!servicesEl) return;
-    if (cardsLive === on) return;
-    cardsLive = on;
-    servicesEl.classList.toggle("is-cards-live", on);
+  function setTypeLanded(on) {
+    if (typeLanded === on) return;
+    typeLanded = on;
+    root.classList.toggle("is-type-landed", on);
   }
 
-  function measureTypeScale() {
-    if (!servicesTitle || !isDesktop) return;
-    const prev = servicesTitle.style.transform;
-    const trackPrev = track ? track.style.transform : "";
-    servicesTitle.style.transform = "none";
-    if (track) track.style.transform = "translate3d(0, 0, 0)";
+  function measureTypeLayout() {
+    if (!typeHoldTitle || !servicesTitle || !isDesktop) return;
+    const prev = typeHoldTitle.style.transform;
+    typeHoldTitle.style.transform = "none";
+    const nat = typeHoldTitle.getBoundingClientRect();
+    typeNatW = Math.max(1, nat.width);
+    typeStart = { x: nat.left, y: nat.top };
+    typeHoldTitle.style.transform = prev;
+
     const w = Math.max(1, servicesTitle.offsetWidth);
-    const t = servicesTitle.getBoundingClientRect();
-    const panel = document.querySelector("[data-panel]");
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    if (panel) {
-      const p = panel.getBoundingClientRect();
-      typeMaxScale = Math.min(4.6, Math.max(2.8, (vw * 0.7) / w));
-      /* Start: large mid-screen type — cards are not in frame yet. */
-      typeStartX = p.right - 56 - t.right;
-      typeStartY = vh * 0.4 - t.top;
-      /* Rest: just above the top-right of the first card. */
-      typeRestX = p.right - 36 - t.right;
-      typeRestY = p.top - 22 - t.bottom;
-      cardParkY = Math.max(vh * 0.75, vh - p.top + 120);
-    } else {
-      typeMaxScale = Math.min(4.2, Math.max(2.6, (vw * 0.7) / w));
-      typeStartX = 0;
-      typeStartY = vh * 0.28;
-      typeRestX = 0;
-      typeRestY = 0;
-      cardParkY = vh * 0.8;
-    }
-    servicesTitle.style.transform = prev;
-    if (track) track.style.transform = trackPrev;
+    const head = document.querySelector(".services-head");
+    const top = head ? parseFloat(getComputedStyle(head).top) || 88 : 88;
+    const headRect = head ? head.getBoundingClientRect() : null;
+    const right = headRect ? headRect.right : window.innerWidth - 40;
+    typeRest = { x: right - w, y: top, w };
   }
 
-  function applyTypeSettle(settle) {
-    if (!servicesTitle) return;
-    const t = Math.min(1, Math.max(0, settle));
-    /* Arrive at the resting spot around 62% — keep shrinking after that. */
-    const move = Math.min(1, t / 0.62);
-    const moveE = 1 - Math.pow(1 - move, 1.4);
-    const scaleE = 1 - Math.pow(1 - t, 1.15);
-    const scale = typeMaxScale - (typeMaxScale - 1) * scaleE;
-    const x = typeStartX + (typeRestX - typeStartX) * moveE;
-    const y = typeStartY + (typeRestY - typeStartY) * moveE;
-    const next = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale3d(${scale.toFixed(3)}, ${scale.toFixed(3)}, 1)`;
+  function applyTypeHold(progress) {
+    if (!typeHoldTitle || !isDesktop || reduceMotion) {
+      setTypeLanded(true);
+      if (typeHoldTitle) typeHoldTitle.style.transform = "";
+      return;
+    }
+    const p = Math.min(1, Math.max(0, progress));
+    if (p <= 0.001) {
+      lastTypeTf = "";
+      typeHoldTitle.style.transform = "";
+      setTypeLanded(false);
+      return;
+    }
+    const move = Math.min(1, p / 0.58);
+    const moveE = 1 - Math.pow(1 - move, 1.15);
+    const scaleE = 1 - Math.pow(1 - p, 1.05);
+    const endScale = typeRest.w / typeNatW;
+    const scale = 1 - (1 - endScale) * scaleE;
+    /* Origin is right-top, so scale alone handles the horizontal settle. */
+    const y = (typeRest.y - typeStart.y) * moveE;
+    const next = `translate3d(0px, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
     if (next === lastTypeTf) return;
     lastTypeTf = next;
-    servicesTitle.style.transform = next;
+    typeHoldTitle.style.transformOrigin = "right top";
+    typeHoldTitle.style.transform = next;
+    setTypeLanded(p >= 0.995);
+  }
+
+  function typeHoldStep() {
+    if (!typeHold || !typeHoldTitle) {
+      setTypeLanded(true);
+      return false;
+    }
+    if (!isDesktop || reduceMotion) {
+      setTypeLanded(true);
+      typeHoldTitle.style.transform = "";
+      return false;
+    }
+    const rect = typeHold.getBoundingClientRect();
+    const vh = window.innerHeight;
+    if (rect.bottom < 0) {
+      setTypeLanded(true);
+      return false;
+    }
+    if (rect.top > vh) {
+      setTypeLanded(false);
+      lastTypeTf = "";
+      typeHoldTitle.style.transform = "";
+      return false;
+    }
+    const total = Math.max(1, typeHold.offsetHeight - vh);
+    const raw = Math.min(1, Math.max(0, -rect.top / total));
+    if (!typeNatW || typeNatW < 2 || raw < 0.22) measureTypeLayout();
+    const progress = Math.min(1, Math.max(0, (raw - 0.22) / 0.78));
+    applyTypeHold(progress);
+    return progress > 0 && progress < 1;
   }
 
   function measureMetrics() {
@@ -255,7 +278,12 @@
       metrics.svcTop = r.top + y;
       metrics.svcH = r.height;
     }
-    measureTypeScale();
+    if (typeHold) {
+      const r = typeHold.getBoundingClientRect();
+      metrics.typeTop = r.top + y;
+      metrics.typeH = r.height;
+    }
+    measureTypeLayout();
   }
 
   function nearRange(top, height, pad) {
@@ -263,7 +291,6 @@
     const vh = window.innerHeight;
     return y + vh + pad > top && y - pad < top + height;
   }
-  const root = document.documentElement;
   let nightVal = 0;
   let nightOn = false;
 
@@ -297,7 +324,7 @@
       const svcP = clamp01(
         -servicesEl.getBoundingClientRect().top / Math.max(1, servicesEl.offsetHeight - vh)
       );
-      const cardP = svcP <= TYPE_SETTLE ? 0 : (svcP - TYPE_SETTLE) / (1 - TYPE_SETTLE);
+      const cardP = svcP;
       farAfter = cardP > 0.55;
     }
     if (farBefore || farAfter) {
@@ -331,9 +358,7 @@
       if (servicesEl) {
         const svc = servicesEl.getBoundingClientRect();
         const svcP = clamp01(-svc.top / Math.max(1, svc.height - vh));
-        const cardP =
-          svcP <= TYPE_SETTLE ? 0 : (svcP - TYPE_SETTLE) / (1 - TYPE_SETTLE);
-        leave = cardP <= 0.32 ? 1 : clamp01(1 - (cardP - 0.32) / 0.3);
+        leave = svcP <= 0.32 ? 1 : clamp01(1 - (svcP - 0.32) / 0.3);
       }
       target = easeInOut(Math.min(enter, leave));
     }
@@ -572,15 +597,8 @@
     releaseLastSnap();
     laneLock = 0;
     lastTrackShift = 1e9;
-    lastTypeTf = "";
-    cardsLive = false;
     if (servicesTitle) servicesTitle.style.transform = "";
-    if (track) track.style.opacity = "";
-    if (servicesProgress) servicesProgress.style.opacity = "";
-    if (services) {
-      services.classList.remove("is-hot");
-      services.classList.remove("is-cards-live");
-    }
+    if (services) services.classList.remove("is-hot");
   }
 
   const panelKeys = ["", "", "", ""];
@@ -596,10 +614,6 @@
         resetServicesMotion();
         hsActive = false;
       }
-      if (isDesktop && !reduceMotion && rect.top > vh) {
-        applyTypeSettle(0);
-        setCardsLive(false);
-      }
       return false;
     }
 
@@ -608,8 +622,6 @@
         resetServicesMotion();
         hsActive = false;
       }
-      if (servicesTitle) servicesTitle.style.transform = "";
-      if (track) track.style.transform = "";
       if (!reduceMotion && panels[3]) {
         const r = panels[3].getBoundingClientRect();
         const inView = r.top < vh * 0.72 && r.bottom > vh * 0.28;
@@ -622,26 +634,8 @@
 
     const total = Math.max(1, rect.height - vh);
     const raw = -rect.top / total;
-    const settle = raw <= 0 ? 0 : Math.min(1, raw / TYPE_SETTLE);
-    /*
-      0–40%: title alone, shrinking toward the dock
-      40–62%: cards rise as title arrives still oversized
-      62–100%: title finishes shrinking in its resting spot
-    */
-    const cardIn = Math.min(1, Math.max(0, (settle - 0.4) / 0.22));
-    const cardE = 1 - Math.pow(1 - cardIn, 1.35);
-    setCardsLive(cardE > 0.02);
-    if (layoutDirty) {
-      measureServices();
-      measureTypeScale();
-    }
-    applyTypeSettle(settle);
-    const progOp = cardE.toFixed(3);
-    if (servicesProgress && servicesProgress.style.opacity !== progOp) {
-      servicesProgress.style.opacity = progOp;
-    }
-    const target =
-      raw <= TYPE_SETTLE ? 0 : Math.min(1, Math.max(0, (raw - TYPE_SETTLE) / (1 - TYPE_SETTLE)));
+    if (layoutDirty) measureServices();
+    const target = Math.min(1, Math.max(0, raw));
     const span = Math.max(1, panels.length - 1);
     const {
       destForward,
@@ -742,14 +736,9 @@
       const dist = Math.abs(pos - i);
       const t = Math.min(1, dist);
       const s = t * t * (3 - 2 * t);
-      let scale = 1 - 0.32 * s;
-      let y = (42 * s) | 0;
-      let opacity = 1 - 0.2 * s;
-      if (settle < 0.999) {
-        y += ((1 - cardE) * cardParkY) | 0;
-        opacity *= cardE;
-        scale *= 0.92 + 0.08 * cardE;
-      }
+      const scale = 1 - 0.32 * s;
+      const y = (42 * s) | 0;
+      const opacity = 1 - 0.2 * s;
       const key = `${scale.toFixed(3)}|${y}|${opacity.toFixed(2)}`;
       if (panelKeys[i] === key) continue;
       panelKeys[i] = key;
@@ -1024,6 +1013,9 @@
       if (!metricsReady || nearRange(metrics.filmTop, metrics.filmH, vh) || !metrics.filmH) {
         filmMorph();
       }
+      const nearType = !metricsReady || nearRange(metrics.typeTop, metrics.typeH, vh);
+      let keepType = false;
+      if (nearType || !metrics.typeH) keepType = typeHoldStep();
       const nearSvc = !metricsReady || nearRange(metrics.svcTop, metrics.svcH, 0);
       let keepServices = false;
       if (nearSvc) keepServices = servicesFrame();
@@ -1034,10 +1026,10 @@
       const nearNight = !metricsReady || nearRange(metrics.nightTop, metrics.nightH, vh);
       const pastNight = metricsReady && y + vh * 0.62 >= metrics.nightTop;
       let keepNight = false;
-      if (nearNight || nearSvc || !pastNight) keepNight = nightStep();
+      if (nearNight || nearSvc || nearType || !pastNight) keepNight = nightStep();
       else if (nightVal > 0.002) keepNight = nightStep();
       else setNightIn(true);
-      if (keepServices || keepNight) needScrollWork = true;
+      if (keepServices || keepNight || keepType) needScrollWork = true;
     }
 
     if (doEnv || doScroll) {
