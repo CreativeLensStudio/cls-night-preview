@@ -174,6 +174,8 @@
   let lastTypeTf = "";
   let typeMaxScale = 3.4;
   let typeRestH = 36;
+  let typeRestX = 0;
+  let typeRestY = 0;
 
   function measureTypeScale() {
     if (!servicesTitle || !isDesktop) return;
@@ -183,6 +185,13 @@
     const maxW = window.innerWidth - 120;
     typeMaxScale = Math.min(4.4, Math.max(2.5, (maxW * 0.88) / Math.max(1, w)));
     typeRestH = Math.max(24, servicesTitle.offsetHeight);
+    const panel = document.querySelector("[data-panel]");
+    if (panel) {
+      const t = servicesTitle.getBoundingClientRect();
+      const p = panel.getBoundingClientRect();
+      typeRestX = p.right - 36 - t.right;
+      typeRestY = p.top - 18 - t.bottom;
+    }
     servicesTitle.style.transform = prev;
   }
 
@@ -191,9 +200,11 @@
     const e = 1 - Math.pow(1 - Math.min(1, Math.max(0, settle)), 1.7);
     const scale = typeMaxScale - (typeMaxScale - 1) * e;
     const scaledH = typeRestH * scale;
-    const maxY = Math.max(8, vh * 0.9 - scaledH - 80);
-    const y = (1 - e) * Math.min(vh * 0.3, maxY);
-    const next = `translate3d(0, ${y.toFixed(1)}px, 0) scale3d(${scale.toFixed(3)}, ${scale.toFixed(3)}, 1)`;
+    const maxStartY = Math.max(8, vh * 0.9 - scaledH - 80);
+    const startY = Math.min(vh * 0.3, maxStartY);
+    const x = e * typeRestX;
+    const y = (1 - e) * startY + e * typeRestY;
+    const next = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale3d(${scale.toFixed(3)}, ${scale.toFixed(3)}, 1)`;
     if (next === lastTypeTf) return;
     lastTypeTf = next;
     servicesTitle.style.transform = next;
@@ -206,7 +217,7 @@
       metrics.nightTop = r.top + y;
       metrics.nightH = r.height;
     }
-    const filmEl = document.getElementById("film");
+    const filmEl = document.querySelector(".film");
     if (filmEl) {
       const r = filmEl.getBoundingClientRect();
       metrics.filmTop = r.top + y;
@@ -394,7 +405,8 @@
     }
     const y = window.scrollY;
     const vh = window.innerHeight;
-    if (y + vh < metrics.filmTop || y > metrics.filmTop + metrics.filmH) return;
+    const top = film.offsetTop;
+    if (y + vh < top || y > top + film.offsetHeight) return;
     const rect = film.getBoundingClientRect();
     const raw = (vh * 0.75 - rect.top) / (vh * 0.57);
     const p = Math.min(1, Math.max(0, raw));
@@ -576,17 +588,19 @@
     const total = Math.max(1, rect.height - vh);
     const raw = -rect.top / total;
     const settle = raw <= 0 ? 0 : Math.min(1, raw / TYPE_SETTLE);
+    const enter = 1 - Math.pow(1 - settle, 1.7);
+    if (layoutDirty) {
+      measureServices();
+      measureTypeScale();
+    }
     applyTypeSettle(settle, vh);
-    const trackReveal = Math.min(1, Math.max(0, (settle - 0.68) / 0.32));
-    const trackOp = trackReveal.toFixed(3);
-    if (track.style.opacity !== trackOp) track.style.opacity = trackOp;
-    if (servicesProgress && servicesProgress.style.opacity !== trackOp) {
-      servicesProgress.style.opacity = trackOp;
+    const progOp = enter.toFixed(3);
+    if (servicesProgress && servicesProgress.style.opacity !== progOp) {
+      servicesProgress.style.opacity = progOp;
     }
     const target =
       raw <= TYPE_SETTLE ? 0 : Math.min(1, Math.max(0, (raw - TYPE_SETTLE) / (1 - TYPE_SETTLE)));
     const span = Math.max(1, panels.length - 1);
-    if (layoutDirty) measureServices();
     const {
       destForward,
       destBack,
@@ -686,9 +700,15 @@
       const dist = Math.abs(pos - i);
       const t = Math.min(1, dist);
       const s = t * t * (3 - 2 * t);
-      const scale = 1 - 0.32 * s;
-      const y = (42 * s) | 0;
-      const opacity = 1 - 0.2 * s;
+      let scale = 1 - 0.32 * s;
+      let y = (42 * s) | 0;
+      let opacity = 1 - 0.2 * s;
+      if (settle < 0.999) {
+        const grow = 0.82 + 0.18 * enter;
+        scale *= grow;
+        y += ((1 - enter) * 96) | 0;
+        opacity *= 0.25 + 0.75 * enter;
+      }
       const key = `${scale.toFixed(3)}|${y}|${opacity.toFixed(2)}`;
       if (panelKeys[i] === key) continue;
       panelKeys[i] = key;
@@ -960,7 +980,9 @@
       const y = window.scrollY;
       const vh = window.innerHeight;
       const metricsReady = metrics.svcH > 0;
-      if (!metricsReady || nearRange(metrics.filmTop, metrics.filmH, 0)) filmMorph();
+      if (!metricsReady || nearRange(metrics.filmTop, metrics.filmH, vh) || !metrics.filmH) {
+        filmMorph();
+      }
       const nearSvc = !metricsReady || nearRange(metrics.svcTop, metrics.svcH, 0);
       let keepServices = false;
       if (nearSvc) keepServices = servicesFrame();

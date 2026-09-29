@@ -1157,7 +1157,7 @@ body.ready .hero .line-inner {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: calc(var(--header) + 3.5rem) 0.75rem 6vh;
+  padding: calc(var(--header) + 4.5rem) 0.75rem 6vh;
 }
 
 .services-head {
@@ -1165,7 +1165,7 @@ body.ready .hero .line-inner {
   top: calc(var(--header) + 1.5vh);
   left: var(--gutter);
   right: var(--gutter);
-  z-index: 2;
+  z-index: 4;
   display: flex;
   justify-content: space-between;
   align-items: baseline;
