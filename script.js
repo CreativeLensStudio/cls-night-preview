@@ -166,8 +166,38 @@
   const nightVeil = $("#night-veil");
   const nightZone = $("#night-zone");
   const servicesEl = $("#services");
+  const servicesTitle = $("#services-title");
+  const servicesProgress = $(".services-progress");
   const filmCaption = $(".film-caption");
+  const TYPE_SETTLE = 0.1237;
   const metrics = { nightTop: 0, nightH: 0, filmTop: 0, filmH: 0, svcTop: 0, svcH: 0 };
+  let lastTypeTf = "";
+  let typeMaxScale = 3.4;
+  let typeRestH = 36;
+
+  function measureTypeScale() {
+    if (!servicesTitle || !isDesktop) return;
+    const prev = servicesTitle.style.transform;
+    servicesTitle.style.transform = "none";
+    const w = servicesTitle.offsetWidth;
+    const maxW = window.innerWidth - 120;
+    typeMaxScale = Math.min(4.4, Math.max(2.5, (maxW * 0.88) / Math.max(1, w)));
+    typeRestH = Math.max(24, servicesTitle.offsetHeight);
+    servicesTitle.style.transform = prev;
+  }
+
+  function applyTypeSettle(settle, vh) {
+    if (!servicesTitle) return;
+    const e = 1 - Math.pow(1 - Math.min(1, Math.max(0, settle)), 1.7);
+    const scale = typeMaxScale - (typeMaxScale - 1) * e;
+    const scaledH = typeRestH * scale;
+    const maxY = Math.max(8, vh * 0.9 - scaledH - 80);
+    const y = (1 - e) * Math.min(vh * 0.3, maxY);
+    const next = `translate3d(0, ${y.toFixed(1)}px, 0) scale3d(${scale.toFixed(3)}, ${scale.toFixed(3)}, 1)`;
+    if (next === lastTypeTf) return;
+    lastTypeTf = next;
+    servicesTitle.style.transform = next;
+  }
 
   function measureMetrics() {
     const y = window.scrollY;
@@ -187,6 +217,7 @@
       metrics.svcTop = r.top + y;
       metrics.svcH = r.height;
     }
+    measureTypeScale();
   }
 
   function nearRange(top, height, pad) {
@@ -222,7 +253,16 @@
     const top = metrics.nightTop || nightZone.offsetTop;
     const bottom = top + (metrics.nightH || nightZone.offsetHeight);
     const pastNight = y + vh * 0.62 >= top;
-    if (y + vh < top - vh || y > bottom + vh * 0.5) {
+    const farBefore = y + vh < top - vh;
+    let farAfter = y > bottom + vh * 2.2;
+    if (servicesEl) {
+      const svcP = clamp01(
+        -servicesEl.getBoundingClientRect().top / Math.max(1, servicesEl.offsetHeight - vh)
+      );
+      const cardP = svcP <= TYPE_SETTLE ? 0 : (svcP - TYPE_SETTLE) / (1 - TYPE_SETTLE);
+      farAfter = cardP > 0.55;
+    }
+    if (farBefore || farAfter) {
       if (nightVal > 0.002) {
         nightVal = 0;
         if (lastNightOpacity !== 0) {
@@ -253,7 +293,9 @@
       if (servicesEl) {
         const svc = servicesEl.getBoundingClientRect();
         const svcP = clamp01(-svc.top / Math.max(1, svc.height - vh));
-        leave = svcP <= 0.32 ? 1 : clamp01(1 - (svcP - 0.32) / 0.3);
+        const cardP =
+          svcP <= TYPE_SETTLE ? 0 : (svcP - TYPE_SETTLE) / (1 - TYPE_SETTLE);
+        leave = cardP <= 0.32 ? 1 : clamp01(1 - (cardP - 0.32) / 0.3);
       }
       target = easeInOut(Math.min(enter, leave));
     }
@@ -491,6 +533,10 @@
     releaseLastSnap();
     laneLock = 0;
     lastTrackShift = 1e9;
+    lastTypeTf = "";
+    if (servicesTitle) servicesTitle.style.transform = "";
+    if (track) track.style.opacity = "";
+    if (servicesProgress) servicesProgress.style.opacity = "";
     if (services) services.classList.remove("is-hot");
   }
 
@@ -507,6 +553,7 @@
         resetServicesMotion();
         hsActive = false;
       }
+      if (isDesktop && !reduceMotion && rect.top > vh) applyTypeSettle(0, vh);
       return false;
     }
 
@@ -515,6 +562,7 @@
         resetServicesMotion();
         hsActive = false;
       }
+      if (servicesTitle) servicesTitle.style.transform = "";
       if (!reduceMotion && panels[3]) {
         const r = panels[3].getBoundingClientRect();
         const inView = r.top < vh * 0.72 && r.bottom > vh * 0.28;
@@ -527,7 +575,16 @@
 
     const total = Math.max(1, rect.height - vh);
     const raw = -rect.top / total;
-    const target = Math.min(1, Math.max(0, raw));
+    const settle = raw <= 0 ? 0 : Math.min(1, raw / TYPE_SETTLE);
+    applyTypeSettle(settle, vh);
+    const trackReveal = Math.min(1, Math.max(0, (settle - 0.68) / 0.32));
+    const trackOp = trackReveal.toFixed(3);
+    if (track.style.opacity !== trackOp) track.style.opacity = trackOp;
+    if (servicesProgress && servicesProgress.style.opacity !== trackOp) {
+      servicesProgress.style.opacity = trackOp;
+    }
+    const target =
+      raw <= TYPE_SETTLE ? 0 : Math.min(1, Math.max(0, (raw - TYPE_SETTLE) / (1 - TYPE_SETTLE)));
     const span = Math.max(1, panels.length - 1);
     if (layoutDirty) measureServices();
     const {

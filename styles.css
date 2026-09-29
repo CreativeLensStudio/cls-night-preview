@@ -1097,8 +1097,15 @@ body.ready .hero .line-inner {
    ------------------------------------------------------------------ */
 
 .manifesto {
-  padding: clamp(6rem, 16vh, 12rem) 0;
+  padding: 0;
   border-top: 0;
+}
+
+.manifesto-lead {
+  padding: clamp(6rem, 16vh, 12rem) 0 clamp(8rem, 22vh, 14rem);
+  min-height: 100vh;
+  min-height: 100svh;
+  box-sizing: border-box;
 }
 
 .manifesto-grid {
@@ -1139,7 +1146,7 @@ body.ready .hero .line-inner {
 
 .services {
   position: relative;
-  height: 780vh;
+  height: 890vh;
 }
 
 .services-pin {
@@ -1165,9 +1172,20 @@ body.ready .hero .line-inner {
   gap: 2rem;
 }
 
+.services-head .eyebrow {
+  margin: 0;
+}
+
 .services-head h2 {
   font-size: clamp(1.4rem, 2.4vw, 2.2rem);
   font-weight: 800;
+  text-align: right;
+  white-space: nowrap;
+  transform-origin: right top;
+}
+
+.services.is-hot .services-head h2 {
+  will-change: transform;
 }
 
 .services-track {
@@ -1915,6 +1933,11 @@ html.is-analytics .services-progress {
     gap: 0.5rem;
   }
 
+  .manifesto-lead {
+    min-height: 0;
+    padding: clamp(4rem, 10vh, 7rem) 0;
+  }
+
   .manifesto-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -1945,6 +1968,12 @@ html.is-analytics .services-progress {
     gap: 0.25rem;
     padding: 0 var(--gutter);
     margin-bottom: 2rem;
+  }
+
+  .services-head h2 {
+    white-space: normal;
+    text-align: left;
+    transform: none !important;
   }
 
   .services-track {
@@ -2063,6 +2092,15 @@ html.is-analytics .services-progress {
   .av-scene { transform: none !important; }
 
   .film-stage { clip-path: inset(0 var(--gutter) round 2rem) !important; }
+
+  .services-head {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+  }
+  .services-head h2 {
+    transform: none !important;
+    white-space: normal;
+  }
 
   .services { height: auto; }
   .services-pin { position: static; height: auto; overflow-x: auto; }
