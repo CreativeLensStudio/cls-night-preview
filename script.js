@@ -217,9 +217,7 @@
     }
     const move = Math.min(1, p / 0.58);
     const moveE = 1 - Math.pow(1 - move, 1.15);
-    /* Mostly finished shrinking by the time it docks over the card. */
-    const scaleP = Math.min(1, p / 0.7);
-    const scaleE = 1 - Math.pow(1 - scaleP, 1.35);
+    const scaleE = 1 - Math.pow(1 - p, 1.05);
     const endScale = typeRest.w / typeNatW;
     const scale = 1 - (1 - endScale) * scaleE;
     /* Origin is right-top, so scale alone handles the horizontal settle. */
