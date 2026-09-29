@@ -170,203 +170,39 @@
   const servicesProgress = $(".services-progress");
   const filmCaption = $(".film-caption");
   const typeHold = $("#type-hold");
-  const typeHoldTitle = $("#type-hold-title");
   const root = document.documentElement;
   const metrics = { nightTop: 0, nightH: 0, filmTop: 0, filmH: 0, svcTop: 0, svcH: 0, typeTop: 0, typeH: 0 };
-  let lastTypeTf = "";
-  let typeLanded = false;
-  let typeNatW = 1;
-  let typeStart = { x: 0, y: 0 };
-  let typeRest = { x: 0, y: 0, w: 1, right: 40 };
-  /* After cards pin, this much scroll finishes the title shrink before scrub. */
-  const TYPE_SETTLE_VH = 0.9;
-  let typeLandClear = 0;
-
-  function servicesSettlePx() {
-    return window.innerHeight * TYPE_SETTLE_VH;
-  }
+  let lastTitleFocus = "";
 
   function servicesCardRaw(rect, vh) {
     const total = Math.max(1, rect.height - vh);
-    const raw = -rect.top / total;
-    const settle = Math.min(0.2, Math.max(0.04, servicesSettlePx() / total));
-    if (raw <= settle) return 0;
-    return Math.min(1, Math.max(0, (raw - settle) / (1 - settle)));
+    return Math.min(1, Math.max(0, -rect.top / total));
   }
 
-  function clearTypeHoldFixed() {
-    if (!typeHoldTitle) return;
-    typeHoldTitle.style.position = "";
-    typeHoldTitle.style.top = "";
-    typeHoldTitle.style.right = "";
-    typeHoldTitle.style.left = "";
-    typeHoldTitle.style.width = "";
-    typeHoldTitle.style.transform = "";
-    typeHoldTitle.style.fontVariationSettings = "";
-    lastTypeTf = "";
-  }
-
-  function setTypeLanded(on) {
-    if (typeLanded === on) return;
-    typeLanded = on;
-    root.classList.toggle("is-type-landed", on);
-    window.clearTimeout(typeLandClear);
-    if (on && typeHoldTitle) {
-      /* Keep the fixed title in place while opacity crossfades, then clear. */
-      typeLandClear = window.setTimeout(clearTypeHoldFixed, 420);
-    }
-  }
-
-  function measureTypeRest() {
-    if (!servicesTitle || !isDesktop) return;
-    const head = document.querySelector(".services-head");
-    const top = head ? parseFloat(getComputedStyle(head).top) || 88 : 88;
-    const svcRect = servicesTitle.getBoundingClientRect();
-    const w = Math.max(1, svcRect.width || servicesTitle.offsetWidth);
-    const rightEdge = svcRect.right || (head ? head.getBoundingClientRect().right : window.innerWidth - 40);
-    const right = Math.max(0, window.innerWidth - rightEdge);
-    typeRest = { x: rightEdge - w, y: top, w, right };
-  }
-
-  function measureTypeLayout() {
-    if (!typeHoldTitle || !servicesTitle || !isDesktop) return;
-    const prev = typeHoldTitle.style.transform;
-    const prevPos = typeHoldTitle.style.position;
-    const prevTop = typeHoldTitle.style.top;
-    const prevRight = typeHoldTitle.style.right;
-    const prevLeft = typeHoldTitle.style.left;
-    const prevWidth = typeHoldTitle.style.width;
-    typeHoldTitle.style.position = "";
-    typeHoldTitle.style.top = "";
-    typeHoldTitle.style.right = "";
-    typeHoldTitle.style.left = "";
-    typeHoldTitle.style.width = "";
-    typeHoldTitle.style.transform = "none";
-    const nat = typeHoldTitle.getBoundingClientRect();
-    typeNatW = Math.max(1, nat.width);
-    typeStart = { x: nat.left, y: nat.top };
-    typeHoldTitle.style.transform = prev;
-    typeHoldTitle.style.position = prevPos;
-    typeHoldTitle.style.top = prevTop;
-    typeHoldTitle.style.right = prevRight;
-    typeHoldTitle.style.left = prevLeft;
-    typeHoldTitle.style.width = prevWidth;
-    measureTypeRest();
-  }
-
-  function applyTypeHold(progress) {
-    if (!typeHoldTitle || !isDesktop || reduceMotion) {
-      setTypeLanded(true);
-      if (typeHoldTitle) clearTypeHoldFixed();
-      return;
-    }
-    const p = Math.min(1, Math.max(0, progress));
-    if (p <= 0.001) {
-      clearTypeHoldFixed();
-      setTypeLanded(false);
-      return;
-    }
-    /* Position docks early; scale keeps going after it's in place. */
-    const dockAt = 0.46;
-    const move = Math.min(1, p / dockAt);
-    const moveE = move * move * (3 - 2 * move);
-    const scaleE = p * p * (3 - 2 * p);
-    const endScale = Math.min(1, typeRest.w / typeNatW);
-    const scale = 1 - (1 - endScale) * scaleE;
-    const top = typeStart.y + (typeRest.y - typeStart.y) * moveE;
-    const startRightEdge = typeStart.x + typeNatW;
-    const endRightEdge = typeRest.x + typeRest.w;
-    const rightEdge = startRightEdge + (endRightEdge - startRightEdge) * moveE;
-    const left = rightEdge - typeNatW * scale;
-    const opsz = Math.round(96 - (96 - 48) * scaleE);
-    const next = `fixed|${top.toFixed(1)}|${left.toFixed(1)}|${scale.toFixed(3)}|${opsz}`;
-    if (next === lastTypeTf) return;
-    lastTypeTf = next;
-    typeHoldTitle.style.position = "fixed";
-    typeHoldTitle.style.right = "auto";
-    typeHoldTitle.style.left = `${left.toFixed(1)}px`;
-    typeHoldTitle.style.top = `${top.toFixed(1)}px`;
-    typeHoldTitle.style.width = `${typeNatW.toFixed(1)}px`;
-    typeHoldTitle.style.transformOrigin = "left top";
-    typeHoldTitle.style.transform = `scale(${scale.toFixed(3)})`;
-    typeHoldTitle.style.fontVariationSettings = `"opsz" ${opsz}, "wdth" 100`;
-  }
-
-  function setTypeBlend(progress) {
-    const head = document.querySelector(".services-head");
-    const pin = typeHold ? typeHold.querySelector(".type-hold-pin") : null;
-    if (!head || !pin) return;
-    /* One slow blink across the seat, then it holds solid. */
-    const t = Math.min(1, Math.max(0, (progress - 0.74) / 0.26));
-    if (t <= 0.001) {
-      head.style.opacity = "";
-      pin.style.opacity = "";
-      return;
-    }
-    const blink = Math.sin(Math.min(1, t / 0.72) * Math.PI);
-    const seat = Math.min(1, Math.max(0, (t - 0.42) / 0.58));
-    const seatE = seat * seat * (3 - 2 * seat);
-    const pinOpacity = (1 - blink * 0.55) * (1 - seatE);
-    pin.style.opacity = pinOpacity.toFixed(3);
-    head.style.opacity = seatE.toFixed(3);
-  }
-
-  function typeHoldStep() {
-    if (!typeHold || !typeHoldTitle) {
-      setTypeLanded(true);
+  function titleFocusStep() {
+    if (!servicesTitle) return false;
+    if (reduceMotion) {
+      servicesTitle.style.opacity = "";
+      servicesTitle.style.filter = "";
       return false;
     }
-    if (!isDesktop || reduceMotion) {
-      setTypeLanded(true);
-      typeHoldTitle.style.transform = "";
-      return false;
-    }
-    const rect = typeHold.getBoundingClientRect();
+    const head = servicesTitle.closest(".services-head");
+    if (!head) return false;
+    const top = head.getBoundingClientRect().top;
     const vh = window.innerHeight;
-    const servicesTop = servicesEl ? servicesEl.getBoundingClientRect().top : vh;
-
-    if (rect.top > vh) {
-      setTypeLanded(false);
-      lastTypeTf = "";
-      typeHoldTitle.style.position = "";
-      typeHoldTitle.style.top = "";
-      typeHoldTitle.style.right = "";
-      typeHoldTitle.style.left = "";
-      typeHoldTitle.style.width = "";
-      typeHoldTitle.style.transform = "";
-      return false;
-    }
-
-    const total = Math.max(1, typeHold.offsetHeight - vh);
-    if (!typeNatW || typeNatW < 2) measureTypeLayout();
-    else measureTypeRest();
-
-    /*
-      One continuous scroll from the empty-space hold through the pinned
-      settle. No phase handoff, so the scale never jumps.
-    */
-    const y = window.scrollY;
-    const start = typeHold.offsetTop + total * 0.18;
-    const end = (servicesEl ? servicesEl.offsetTop : start) + servicesSettlePx();
-    const progress = Math.min(1, Math.max(0, (y - start) / Math.max(1, end - start)));
-    const settleDone = progress >= 0.999 && servicesTop <= 2;
-    setTypeBlend(progress);
-
-    if (y + vh < typeHold.offsetTop) {
-      setTypeLanded(false);
-      clearTypeHoldFixed();
-      return false;
-    }
-
-    if (settleDone) {
-      applyTypeHold(1);
-      setTypeLanded(true);
-      return false;
-    }
-
-    applyTypeHold(progress);
-    setTypeLanded(false);
-    return true;
+    const restTop = parseFloat(getComputedStyle(head).top) || 88;
+    const delta = top - restTop;
+    let amount = 1;
+    if (delta > 2) amount = 1 - Math.min(1, delta / (vh * 0.48));
+    else if (delta < -2) amount = 1 - Math.min(1, -delta / (vh * 0.4));
+    const eased = amount * amount * (3 - 2 * amount);
+    const blur = (1 - eased) * 14;
+    const next = `${eased.toFixed(3)}|${blur.toFixed(1)}`;
+    if (next === lastTitleFocus) return eased > 0.004 && eased < 0.996;
+    lastTitleFocus = next;
+    servicesTitle.style.opacity = eased.toFixed(3);
+    servicesTitle.style.filter = blur < 0.3 ? "none" : `blur(${blur.toFixed(1)}px)`;
+    return eased > 0.004 && eased < 0.996;
   }
 
   function measureMetrics() {
@@ -392,7 +228,6 @@
       metrics.typeTop = r.top + y;
       metrics.typeH = r.height;
     }
-    measureTypeLayout();
   }
 
   function nearRange(top, height, pad) {
@@ -1125,8 +960,8 @@
       }
       const nearType = !metricsReady || nearRange(metrics.typeTop, metrics.typeH, vh);
       let keepType = false;
-      if (nearType || !metrics.typeH || nearRange(metrics.svcTop, metrics.svcH, vh)) {
-        keepType = typeHoldStep();
+      if (nearType || nearRange(metrics.svcTop, metrics.svcH, vh)) {
+        keepType = titleFocusStep();
       }
       const nearSvc = !metricsReady || nearRange(metrics.svcTop, metrics.svcH, 0);
       let keepServices = false;

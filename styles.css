@@ -1160,6 +1160,7 @@ body.ready .hero .line-inner {
   align-items: flex-end;
   padding: calc(var(--header) + 2rem) var(--gutter) 8vh;
   pointer-events: none;
+  visibility: hidden;
 }
 
 .type-hold-pin .eyebrow {
@@ -1186,30 +1187,9 @@ html.is-night .type-hold-title {
   color: var(--paper-night);
 }
 
-@media (min-width: 901px) {
-  html:not(.is-type-landed) .services-head {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  html.is-type-landed .type-hold-pin {
-    opacity: 0;
-    pointer-events: none;
-  }
-
-  html.is-type-landed .type-hold-title {
-    opacity: 0;
-  }
-}
-
-/* ------------------------------------------------------------------
-   Services — pinned horizontal, each panel its own colour
-   ------------------------------------------------------------------ */
-
 .services {
   position: relative;
-  /* Extra lead scroll so the title can finish shrinking before cards scrub. */
-  height: 870vh;
+  height: 780vh;
 }
 
 .services-pin {
