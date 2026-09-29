@@ -1169,14 +1169,16 @@ body.ready .hero .line-inner {
 
 .type-hold-title {
   margin: 0;
-  max-width: 11ch;
   font-family: var(--display);
-  font-size: clamp(3.4rem, 9vw, 7.6rem);
+  font-size: clamp(2.6rem, 6.2vw, 5.8rem);
   font-weight: 800;
   font-variation-settings: "opsz" 96, "wdth" 100;
   letter-spacing: -0.05em;
-  line-height: 0.92;
+  line-height: 0.95;
   text-align: right;
+  white-space: nowrap !important;
+  text-wrap: nowrap;
+  max-width: none;
   transform-origin: right top;
 }
 
