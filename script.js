@@ -193,6 +193,7 @@
           nightOn = false;
           root.classList.remove("is-night");
         }
+        root.classList.remove("is-night-in");
       }
       return false;
     }
@@ -231,6 +232,7 @@
       nightOn = shouldNight;
       root.classList.toggle("is-night", nightOn);
     }
+    root.classList.toggle("is-night-in", nightVal > 0.04);
     return Math.abs(target - nightVal) > 0.002;
   }
 

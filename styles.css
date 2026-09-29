@@ -181,8 +181,13 @@ html.is-night .env {
 }
 
 html.is-night .env-lens-b,
-html.is-night .env-lens-c {
-  opacity: 0;
+html.is-night .env-lens-c,
+html.is-night .env-wash-b,
+html.is-night-in .env-lens-b,
+html.is-night-in .env-lens-c,
+html.is-night-in .env-wash-b {
+  opacity: 0 !important;
+  visibility: hidden;
 }
 
 html.is-night .hero-top .eyebrow {
@@ -561,8 +566,9 @@ body.ready:not(.entering) .page {
 .env-lens-c { width: 7vmax; height: 7vmax; right: 14vmax; bottom: 10vh; }
 
 .env-lens-b,
-.env-lens-c {
-  transition: opacity 0.7s ease;
+.env-lens-c,
+.env-wash-b {
+  transition: opacity 0.55s ease, visibility 0.55s ease;
 }
 
 /* ------------------------------------------------------------------
