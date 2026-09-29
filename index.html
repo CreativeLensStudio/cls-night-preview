@@ -55,20 +55,20 @@
          around the borders, masked out of the centre, mouse parallax.
          ============================================================ -->
     <div class="env" id="env" aria-hidden="true">
-      <div class="env-scene">
-        <div class="env-layer" data-depth="0.3"><span class="env-wash env-wash-a"></span></div>
-        <div class="env-layer" data-depth="0.5"><span class="env-wash env-wash-b"></span></div>
-        <div class="env-layer" data-depth="0.9">
-          <svg class="env-rules env-rules-tl" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1">
-            <path d="M0 40 L400 200 M0 120 L400 220 M0 200 L400 240 M40 0 L200 400 M120 0 L220 400 M200 0 L240 400"/>
-          </svg>
-          <svg class="env-rules env-rules-br" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1">
-            <path d="M400 360 L0 200 M400 280 L0 180 M400 200 L0 160 M360 400 L200 0 M280 400 L180 0 M200 400 L160 0"/>
-          </svg>
-        </div>
-        <div class="env-layer" data-depth="1.5"><span class="env-lens env-lens-a"></span></div>
-        <div class="env-layer" data-depth="2.1"><span class="env-lens env-lens-b"></span></div>
-        <div class="env-layer" data-depth="2.8"><span class="env-lens env-lens-c"></span></div>
+      <div class="env-scene" id="env-slow">
+        <span class="env-wash env-wash-a"></span>
+        <span class="env-wash env-wash-b"></span>
+        <svg class="env-rules env-rules-tl" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M0 40 L400 200 M0 120 L400 220 M0 200 L400 240 M40 0 L200 400 M120 0 L220 400 M200 0 L240 400"/>
+        </svg>
+        <svg class="env-rules env-rules-br" viewBox="0 0 400 400" fill="none" stroke="currentColor" stroke-width="1">
+          <path d="M400 360 L0 200 M400 280 L0 180 M400 200 L0 160 M360 400 L200 0 M280 400 L180 0 M200 400 L160 0"/>
+        </svg>
+      </div>
+      <div class="env-scene" id="env-fast">
+        <span class="env-lens env-lens-a"></span>
+        <span class="env-lens env-lens-b"></span>
+        <span class="env-lens env-lens-c"></span>
       </div>
     </div>
 

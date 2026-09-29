@@ -150,17 +150,15 @@
   }
 
   /* ------------------------------------------------------------------
-     Edge environment — mouse parallax (translate only, 3 layers)
+     Edge environment — two grouped layers (washes vs lenses)
      ------------------------------------------------------------------ */
-  const envLayers = $$(".env-layer[data-depth]")
-    .filter((el, i) => i !== 2)
-    .slice(0, 3)
-    .map((el) => ({
-      el,
-      depth: parseFloat(el.dataset.depth || "1"),
-    }));
-
+  const envRoot = $("#env");
+  const envSlow = $("#env-slow");
+  const envFast = $("#env-fast");
   const env = { tx: 0, ty: 0, x: 0, y: 0 };
+  let envHot = false;
+  let lastSlow = "";
+  let lastFast = "";
   const nightVeil = $("#night-veil");
   const nightZone = $("#night-zone");
   const servicesEl = $("#services");
@@ -237,17 +235,37 @@
   }
 
   function envStep() {
-    if (reduceMotion || !envLayers.length || nightOn || analyticsOn) return false;
-    env.x += (env.tx - env.x) * 0.08;
-    env.y += (env.ty - env.y) * 0.08;
-    const sy = window.scrollY * 0.012;
-    for (let i = 0; i < envLayers.length; i += 1) {
-      const { el, depth } = envLayers[i];
-      const mx = (env.x * depth * 18) | 0;
-      const my = (env.y * depth * 13 - sy * depth) | 0;
-      el.style.transform = `translate3d(${mx}px, ${my}px, 0)`;
+    if (reduceMotion || !envSlow || !envFast || nightOn || analyticsOn) {
+      if (envHot && envRoot) {
+        envHot = false;
+        envRoot.classList.remove("is-hot");
+      }
+      return false;
     }
-    return Math.abs(env.tx - env.x) > 0.002 || Math.abs(env.ty - env.y) > 0.002;
+    env.x += (env.tx - env.x) * 0.1;
+    env.y += (env.ty - env.y) * 0.1;
+    const sy = window.scrollY * 0.012;
+    const sx = (env.x * 8 - sy * 0.15) | 0;
+    const sy1 = (env.y * 6 - sy * 0.35) | 0;
+    const fx = (env.x * 22) | 0;
+    const fy = (env.y * 15 - sy * 1.1) | 0;
+    const slow = `translate3d(${sx}px, ${sy1}px, 0)`;
+    const fast = `translate3d(${fx}px, ${fy}px, 0)`;
+    if (slow !== lastSlow) {
+      lastSlow = slow;
+      envSlow.style.transform = slow;
+    }
+    if (fast !== lastFast) {
+      lastFast = fast;
+      envFast.style.transform = fast;
+    }
+    const moving =
+      Math.abs(env.tx - env.x) > 0.002 || Math.abs(env.ty - env.y) > 0.002;
+    if (moving !== envHot && envRoot) {
+      envHot = moving;
+      envRoot.classList.toggle("is-hot", moving);
+    }
+    return moving;
   }
 
   if (!reduceMotion) {
@@ -408,8 +426,11 @@
     const ry = env.x * 9.5;
     const tx = env.x * 38;
     const ty = env.y * 24;
-    avScene.style.transform =
+    const next =
       `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0)`;
+    if (next === lastAv) return;
+    lastAv = next;
+    avScene.style.transform = next;
   }
 
   function resetServicesMotion() {
@@ -425,9 +446,13 @@
     if (avScene) avScene.style.transform = "";
     releaseLastSnap();
     laneLock = 0;
+    lastTrackShift = 1e9;
+    if (services) services.classList.remove("is-hot");
   }
 
   const panelKeys = ["", "", "", ""];
+  let lastTrackShift = 1e9;
+  let lastAv = "";
 
   function servicesFrame() {
     const rect = services.getBoundingClientRect();
@@ -454,6 +479,7 @@
       return false;
     }
     hsActive = true;
+    if (!services.classList.contains("is-hot")) services.classList.add("is-hot");
 
     const total = Math.max(1, rect.height - vh);
     const raw = -rect.top / total;
@@ -536,7 +562,10 @@
       const eased = u * u * (3 - 2 * u);
       shift = centerThird + (centerLast - centerThird) * eased;
     }
-    track.style.transform = `translate3d(${(-shift).toFixed(1)}px, 0, 0)`;
+    if (Math.abs(shift - lastTrackShift) >= 0.4) {
+      lastTrackShift = shift;
+      track.style.transform = `translate3d(${(-shift).toFixed(1)}px, 0, 0)`;
+    }
 
     const idx = Math.min(span, Math.round(pos));
     if (idx !== lastIndex) {
@@ -550,10 +579,10 @@
     else if (raw > 1) analyticsT = Math.max(0, 1 - (raw - 1) / 0.35);
     else analyticsT = Math.min(1, Math.max(0, (pos - 2.05) / 0.85));
     setAnalyticsChrome(analyticsT);
-    updateAnalyticsParallax();
 
     for (let i = 0; i < panels.length; i++) {
-      const t = Math.min(1, Math.abs(pos - i));
+      const dist = Math.abs(pos - i);
+      const t = Math.min(1, dist);
       const s = t * t * (3 - 2 * t);
       const scale = 1 - 0.32 * s;
       const y = (42 * s) | 0;
@@ -561,7 +590,7 @@
       const key = `${scale.toFixed(3)}|${y}|${opacity.toFixed(2)}`;
       if (panelKeys[i] === key) continue;
       panelKeys[i] = key;
-      panels[i].style.transform = `translate3d(0, ${y}px, 0) scale(${scale.toFixed(3)})`;
+      panels[i].style.transform = `translate3d(0, ${y}px, 0) scale3d(${scale.toFixed(3)}, ${scale.toFixed(3)}, 1)`;
       panels[i].style.opacity = opacity.toFixed(2);
     }
 
@@ -816,7 +845,8 @@
     filmMorph();
     const keepServices = servicesFrame();
     const keepNight = nightStep();
-    if (keepNight || keepServices) kickTick();
+    const keepEnv = envStep();
+    if (keepNight || keepServices || keepEnv) kickTick();
   }
 
   function envTick() {

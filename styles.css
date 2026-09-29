@@ -79,6 +79,10 @@ body {
   perspective: 1200px;
 }
 
+.analytics-veil.is-live .av-scene {
+  will-change: transform;
+}
+
 .av-scene {
   position: absolute;
   inset: -12%;
@@ -477,11 +481,11 @@ body.ready:not(.entering) .page {
 .env-scene {
   position: absolute;
   inset: -6vmax;
+  transform: translate3d(0, 0, 0);
 }
 
-.env-layer {
-  position: absolute;
-  inset: 0;
+.env.is-hot .env-scene {
+  will-change: transform;
 }
 
 .env-wash {
@@ -490,19 +494,31 @@ body.ready:not(.entering) .page {
 }
 
 .env-wash-a {
-  width: 60vmax;
-  height: 60vmax;
-  right: -26vmax;
-  top: -28vmax;
-  background: radial-gradient(circle, rgba(255, 74, 26, 0.5), rgba(255, 74, 26, 0.12) 45%, transparent 68%);
+  width: 68vmax;
+  height: 68vmax;
+  right: -28vmax;
+  top: -30vmax;
+  background: radial-gradient(
+    circle,
+    rgba(255, 74, 26, 0.48) 0%,
+    rgba(255, 74, 26, 0.22) 28%,
+    rgba(255, 74, 26, 0.08) 48%,
+    transparent 70%
+  );
 }
 
 .env-wash-b {
-  width: 54vmax;
-  height: 54vmax;
-  left: -24vmax;
-  bottom: -26vmax;
-  background: radial-gradient(circle, rgba(217, 255, 61, 0.75), rgba(217, 255, 61, 0.2) 45%, transparent 68%);
+  width: 62vmax;
+  height: 62vmax;
+  left: -26vmax;
+  bottom: -28vmax;
+  background: radial-gradient(
+    circle,
+    rgba(217, 255, 61, 0.7) 0%,
+    rgba(217, 255, 61, 0.28) 28%,
+    rgba(217, 255, 61, 0.1) 48%,
+    transparent 70%
+  );
 }
 
 .env-rules {
@@ -1147,6 +1163,12 @@ body.ready .hero .line-inner {
   padding: 0;
   width: max-content;
   perspective: 1600px;
+  transform: translate3d(0, 0, 0);
+}
+
+.services.is-hot .services-track,
+.services.is-hot .panel {
+  will-change: transform;
 }
 
 .panel {
