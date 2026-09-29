@@ -180,31 +180,38 @@
   }
 
   function titleFocusStep() {
-    const pin = typeHold ? typeHold.querySelector(".type-hold-pin") : null;
     const title = typeHold ? typeHold.querySelector(".type-hold-title") : null;
-    if (!typeHold || !pin || !title) return false;
+    const eyebrow = typeHold ? typeHold.querySelector(".eyebrow") : null;
+    if (!typeHold || !title) return false;
     if (!isDesktop || reduceMotion) {
-      pin.classList.remove("is-parked");
-      pin.style.opacity = "";
-      pin.style.filter = "";
+      title.style.opacity = "";
+      title.style.filter = "";
+      if (eyebrow) {
+        eyebrow.style.opacity = "";
+        eyebrow.style.filter = "";
+      }
       return false;
     }
-    pin.classList.add("is-parked");
     const rect = typeHold.getBoundingClientRect();
     const vh = window.innerHeight;
     let amount = 0;
     if (rect.bottom > 0 && rect.top < vh) {
-      if (rect.top > 0) amount = 1 - Math.min(1, rect.top / (vh * 0.7));
-      else if (rect.bottom < vh) amount = Math.min(1, Math.max(0, rect.bottom / (vh * 0.55)));
-      else amount = 1;
+      const enter = 1 - Math.min(1, Math.max(0, rect.top / (vh * 0.85)));
+      const leave = rect.bottom < vh * 1.15 ? Math.min(1, Math.max(0, rect.bottom / (vh * 0.7))) : 1;
+      amount = Math.min(enter, leave);
     }
     const eased = amount * amount * (3 - 2 * amount);
     const blur = (1 - eased) * 16;
     const next = `${eased.toFixed(3)}|${blur.toFixed(1)}`;
     if (next === lastTitleFocus) return eased > 0.004 && eased < 0.996;
     lastTitleFocus = next;
-    pin.style.opacity = eased.toFixed(3);
-    pin.style.filter = blur < 0.3 ? "none" : `blur(${blur.toFixed(1)}px)`;
+    const filter = blur < 0.3 ? "none" : `blur(${blur.toFixed(1)}px)`;
+    title.style.opacity = eased.toFixed(3);
+    title.style.filter = filter;
+    if (eyebrow) {
+      eyebrow.style.opacity = eased.toFixed(3);
+      eyebrow.style.filter = filter;
+    }
     return eased > 0.004 && eased < 0.996;
   }
 

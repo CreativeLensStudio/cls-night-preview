@@ -1147,6 +1147,8 @@ body.ready .hero .line-inner {
 .type-hold {
   position: relative;
   height: 180vh;
+  margin-top: -88vh;
+  z-index: 5;
 }
 
 .type-hold-pin {
@@ -1158,16 +1160,8 @@ body.ready .hero .line-inner {
   flex-direction: column;
   justify-content: flex-end;
   align-items: stretch;
-  padding: 0 var(--gutter) 7vh;
+  padding: 0 var(--gutter) 11vh;
   pointer-events: none;
-}
-
-.type-hold-pin.is-parked {
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 30;
-  height: 100vh;
-  height: 100svh;
 }
 
 @media (min-width: 901px) {
@@ -1193,7 +1187,7 @@ body.ready .hero .line-inner {
   white-space: nowrap !important;
   text-wrap: nowrap;
   max-width: none;
-  transform-origin: right top;
+  color: var(--paper-night);
 }
 
 html.is-night .type-hold-title {
