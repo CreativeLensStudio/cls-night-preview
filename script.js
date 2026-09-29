@@ -183,16 +183,34 @@
     if (typeLanded === on) return;
     typeLanded = on;
     root.classList.toggle("is-type-landed", on);
+    if (on && typeHoldTitle) {
+      typeHoldTitle.style.position = "";
+      typeHoldTitle.style.top = "";
+      typeHoldTitle.style.right = "";
+      typeHoldTitle.style.left = "";
+      typeHoldTitle.style.width = "";
+      typeHoldTitle.style.transform = "";
+      lastTypeTf = "";
+    }
   }
 
   function measureTypeLayout() {
     if (!typeHoldTitle || !servicesTitle || !isDesktop) return;
+    const wasFixed = typeHoldTitle.style.position === "fixed";
     const prev = typeHoldTitle.style.transform;
+    typeHoldTitle.style.position = "";
+    typeHoldTitle.style.top = "";
+    typeHoldTitle.style.right = "";
+    typeHoldTitle.style.left = "";
+    typeHoldTitle.style.width = "";
     typeHoldTitle.style.transform = "none";
     const nat = typeHoldTitle.getBoundingClientRect();
     typeNatW = Math.max(1, nat.width);
     typeStart = { x: nat.left, y: nat.top };
     typeHoldTitle.style.transform = prev;
+    if (wasFixed) {
+      /* keep fixed; applyTypeHold will reapply */
+    }
 
     const w = Math.max(1, servicesTitle.offsetWidth);
     const head = document.querySelector(".services-head");
@@ -205,12 +223,22 @@
   function applyTypeHold(progress) {
     if (!typeHoldTitle || !isDesktop || reduceMotion) {
       setTypeLanded(true);
-      if (typeHoldTitle) typeHoldTitle.style.transform = "";
+      if (typeHoldTitle) {
+        typeHoldTitle.style.position = "";
+        typeHoldTitle.style.top = "";
+        typeHoldTitle.style.right = "";
+        typeHoldTitle.style.transform = "";
+      }
       return;
     }
     const p = Math.min(1, Math.max(0, progress));
     if (p <= 0.001) {
       lastTypeTf = "";
+      typeHoldTitle.style.position = "";
+      typeHoldTitle.style.top = "";
+      typeHoldTitle.style.right = "";
+      typeHoldTitle.style.left = "";
+      typeHoldTitle.style.width = "";
       typeHoldTitle.style.transform = "";
       setTypeLanded(false);
       return;
@@ -220,14 +248,18 @@
     const scaleE = 1 - Math.pow(1 - p, 1.05);
     const endScale = typeRest.w / typeNatW;
     const scale = 1 - (1 - endScale) * scaleE;
-    /* Origin is right-top, so scale alone handles the horizontal settle. */
-    const y = (typeRest.y - typeStart.y) * moveE;
-    const next = `translate3d(0px, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(3)})`;
+    const top = typeStart.y + (typeRest.y - typeStart.y) * moveE;
+    const right = Math.max(0, window.innerWidth - (typeStart.x + typeNatW));
+    const next = `fixed|${top.toFixed(1)}|${right.toFixed(1)}|${scale.toFixed(3)}`;
     if (next === lastTypeTf) return;
     lastTypeTf = next;
+    typeHoldTitle.style.position = "fixed";
+    typeHoldTitle.style.left = "auto";
+    typeHoldTitle.style.right = `${right.toFixed(1)}px`;
+    typeHoldTitle.style.top = `${top.toFixed(1)}px`;
+    typeHoldTitle.style.width = `${typeNatW.toFixed(1)}px`;
     typeHoldTitle.style.transformOrigin = "right top";
-    typeHoldTitle.style.transform = next;
-    setTypeLanded(p >= 0.995);
+    typeHoldTitle.style.transform = `scale(${scale.toFixed(3)})`;
   }
 
   function typeHoldStep() {
@@ -242,22 +274,44 @@
     }
     const rect = typeHold.getBoundingClientRect();
     const vh = window.innerHeight;
-    if (rect.bottom < 0) {
-      setTypeLanded(true);
-      return false;
-    }
+    const servicesTop = servicesEl ? servicesEl.getBoundingClientRect().top : vh;
+    const pinReady = servicesTop <= 2;
+
     if (rect.top > vh) {
       setTypeLanded(false);
       lastTypeTf = "";
+      typeHoldTitle.style.position = "";
+      typeHoldTitle.style.top = "";
+      typeHoldTitle.style.right = "";
+      typeHoldTitle.style.left = "";
+      typeHoldTitle.style.width = "";
       typeHoldTitle.style.transform = "";
       return false;
     }
+
     const total = Math.max(1, typeHold.offsetHeight - vh);
     const raw = Math.min(1, Math.max(0, -rect.top / total));
     if (!typeNatW || typeNatW < 2 || raw < 0.22) measureTypeLayout();
     const progress = Math.min(1, Math.max(0, (raw - 0.22) / 0.78));
+
+    /* Keep the line parked at rest until the cards pin is actually on screen. */
+    if (raw >= 1 || rect.bottom <= 0) {
+      if (pinReady) {
+        setTypeLanded(true);
+        return false;
+      }
+      applyTypeHold(1);
+      setTypeLanded(false);
+      return true;
+    }
+
+    if (progress >= 0.995 && pinReady) {
+      setTypeLanded(true);
+      return false;
+    }
     applyTypeHold(progress);
-    return progress > 0 && progress < 1;
+    setTypeLanded(false);
+    return progress > 0 || !pinReady;
   }
 
   function measureMetrics() {
@@ -1015,7 +1069,9 @@
       }
       const nearType = !metricsReady || nearRange(metrics.typeTop, metrics.typeH, vh);
       let keepType = false;
-      if (nearType || !metrics.typeH) keepType = typeHoldStep();
+      if (nearType || !metrics.typeH || (!typeLanded && nearRange(metrics.svcTop, metrics.svcH, vh))) {
+        keepType = typeHoldStep();
+      }
       const nearSvc = !metricsReady || nearRange(metrics.svcTop, metrics.svcH, 0);
       let keepServices = false;
       if (nearSvc) keepServices = servicesFrame();
