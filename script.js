@@ -178,6 +178,20 @@
   let typeNatW = 1;
   let typeStart = { x: 0, y: 0 };
   let typeRest = { x: 0, y: 0, w: 1 };
+  /* After cards pin, this much scroll finishes the title shrink before scrub. */
+  const TYPE_SETTLE_VH = 0.9;
+
+  function servicesSettlePx() {
+    return window.innerHeight * TYPE_SETTLE_VH;
+  }
+
+  function servicesCardRaw(rect, vh) {
+    const total = Math.max(1, rect.height - vh);
+    const raw = -rect.top / total;
+    const settle = Math.min(0.2, Math.max(0.04, servicesSettlePx() / total));
+    if (raw <= settle) return 0;
+    return Math.min(1, Math.max(0, (raw - settle) / (1 - settle)));
+  }
 
   function setTypeLanded(on) {
     if (typeLanded === on) return;
@@ -244,10 +258,10 @@
       return;
     }
     /* Position docks early; scale keeps going after it's in place. */
-    const dockAt = 0.62;
+    const dockAt = 0.55;
     const move = Math.min(1, p / dockAt);
     const moveE = 1 - Math.pow(1 - move, 1.15);
-    const scaleE = 1 - Math.pow(1 - p, 1.05);
+    const scaleE = 1 - Math.pow(1 - p, 1.08);
     const endScale = typeRest.w / typeNatW;
     const scale = 1 - (1 - endScale) * scaleE;
     const top = typeStart.y + (typeRest.y - typeStart.y) * moveE;
@@ -277,7 +291,6 @@
     const rect = typeHold.getBoundingClientRect();
     const vh = window.innerHeight;
     const servicesTop = servicesEl ? servicesEl.getBoundingClientRect().top : vh;
-    const pinReady = servicesTop <= 2;
 
     if (rect.top > vh) {
       setTypeLanded(false);
@@ -295,27 +308,40 @@
     const raw = Math.min(1, Math.max(0, -rect.top / total));
     if (!typeNatW || typeNatW < 2 || raw < 0.22) measureTypeLayout();
 
-    /* Hold phase covers most of the move/shrink; approach finishes the last scale. */
-    const holdEnd = 0.72;
+    /*
+      1) Empty-space hold: move into place + most of the shrink
+      2) Approach cards: keep shrinking while docking over the first card
+      3) Pinned settle: a little more scroll shrinks the last bit
+      4) Then hand off — cards may scrub
+    */
+    const holdEnd = 0.58;
+    const approachEnd = 0.78;
     const holdP = Math.min(1, Math.max(0, (raw - 0.22) / 0.78));
+    const settlePx = servicesSettlePx();
+    const pinnedScroll = Math.max(0, -servicesTop);
+    const settleDone = servicesTop <= 2 && pinnedScroll >= settlePx - 1;
+
     let progress;
     if (raw < 1 && rect.bottom > 0) {
       progress = holdP * holdEnd;
-    } else if (!pinReady) {
+    } else if (servicesTop > 2) {
       const approach = 1 - Math.min(1, Math.max(0, servicesTop / vh));
-      progress = holdEnd + (1 - holdEnd) * approach;
+      progress = holdEnd + (approachEnd - holdEnd) * approach;
+    } else if (!settleDone) {
+      const settle = Math.min(1, pinnedScroll / Math.max(1, settlePx));
+      progress = approachEnd + (1 - approachEnd) * settle;
     } else {
       progress = 1;
     }
 
-    if (pinReady && progress >= 0.995) {
+    if (settleDone) {
       setTypeLanded(true);
       return false;
     }
 
     applyTypeHold(progress);
     setTypeLanded(false);
-    return progress > 0 || !pinReady;
+    return true;
   }
 
   function measureMetrics() {
@@ -691,9 +717,10 @@
     if (!services.classList.contains("is-hot")) services.classList.add("is-hot");
 
     const total = Math.max(1, rect.height - vh);
-    const raw = -rect.top / total;
+    const rawFull = -rect.top / total;
     if (layoutDirty) measureServices();
-    const target = Math.min(1, Math.max(0, raw));
+    /* Hold card scrub at 0 until the title settle scroll is done. */
+    const target = servicesCardRaw(rect, vh);
     const span = Math.max(1, panels.length - 1);
     const {
       destForward,
@@ -784,8 +811,8 @@
     }
 
     let analyticsT = 0;
-    if (raw < 0) analyticsT = 0;
-    else if (raw > 1) analyticsT = Math.max(0, 1 - (raw - 1) / 0.35);
+    if (rawFull < 0) analyticsT = 0;
+    else if (rawFull > 1) analyticsT = Math.max(0, 1 - (rawFull - 1) / 0.35);
     else analyticsT = Math.min(1, Math.max(0, (pos - 2.05) / 0.85));
     setAnalyticsChrome(analyticsT);
     updateAnalyticsParallax();

@@ -1204,7 +1204,8 @@ html.is-night .type-hold-title {
 
 .services {
   position: relative;
-  height: 780vh;
+  /* Extra lead scroll so the title can finish shrinking before cards scrub. */
+  height: 870vh;
 }
 
 .services-pin {
