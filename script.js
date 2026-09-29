@@ -18,6 +18,8 @@
   desktopQuery.addEventListener("change", (e) => {
     isDesktop = e.matches;
     layoutDirty = true;
+    measureMetrics();
+    kickTick();
   });
 
   /* ------------------------------------------------------------------
@@ -39,6 +41,8 @@
       body.classList.remove("is-loading");
       body.classList.add("ready");
       splash.classList.add("swoop");
+      measureMetrics();
+      kickTick();
     });
 
     setTimeout(() => {
@@ -162,6 +166,34 @@
   const nightVeil = $("#night-veil");
   const nightZone = $("#night-zone");
   const servicesEl = $("#services");
+  const filmCaption = $(".film-caption");
+  const metrics = { nightTop: 0, nightH: 0, filmTop: 0, filmH: 0, svcTop: 0, svcH: 0 };
+
+  function measureMetrics() {
+    const y = window.scrollY;
+    if (nightZone) {
+      const r = nightZone.getBoundingClientRect();
+      metrics.nightTop = r.top + y;
+      metrics.nightH = r.height;
+    }
+    const filmEl = document.getElementById("film");
+    if (filmEl) {
+      const r = filmEl.getBoundingClientRect();
+      metrics.filmTop = r.top + y;
+      metrics.filmH = r.height;
+    }
+    if (servicesEl) {
+      const r = servicesEl.getBoundingClientRect();
+      metrics.svcTop = r.top + y;
+      metrics.svcH = r.height;
+    }
+  }
+
+  function nearRange(top, height, pad) {
+    const y = window.scrollY;
+    const vh = window.innerHeight;
+    return y + vh + pad > top && y - pad < top + height;
+  }
   const root = document.documentElement;
   let nightVal = 0;
   let nightOn = false;
@@ -175,13 +207,20 @@
   }
 
   let lastNightOpacity = -1;
+  let lastNightIn = null;
+
+  function setNightIn(on) {
+    if (lastNightIn === on) return;
+    lastNightIn = on;
+    root.classList.toggle("is-night-in", on);
+  }
 
   function nightStep() {
     if (!nightZone || !nightVeil) return false;
     const y = window.scrollY;
     const vh = window.innerHeight;
-    const top = nightZone.offsetTop;
-    const bottom = top + nightZone.offsetHeight;
+    const top = metrics.nightTop || nightZone.offsetTop;
+    const bottom = top + (metrics.nightH || nightZone.offsetHeight);
     const pastNight = y + vh * 0.62 >= top;
     if (y + vh < top - vh || y > bottom + vh * 0.5) {
       if (nightVal > 0.002) {
@@ -195,13 +234,12 @@
           root.classList.remove("is-night");
         }
       }
-      root.classList.toggle("is-night-in", pastNight);
+      setNightIn(pastNight);
       return false;
     }
 
     const rect = nightZone.getBoundingClientRect();
-    const cap = $(".film-caption");
-    const capTop = cap ? cap.getBoundingClientRect().top : rect.top + rect.height * 0.55;
+    const capTop = filmCaption ? filmCaption.getBoundingClientRect().top : rect.top + rect.height * 0.55;
 
     let target = 0;
     if (reduceMotion) {
@@ -233,7 +271,7 @@
       nightOn = shouldNight;
       root.classList.toggle("is-night", nightOn);
     }
-    root.classList.toggle("is-night-in", nightVal > 0.04 || pastNight);
+    setNightIn(nightVal > 0.04 || pastNight);
     return Math.abs(target - nightVal) > 0.002;
   }
 
@@ -250,7 +288,7 @@
         envHot = false;
         envRoot.classList.remove("is-hot");
       }
-      return moving || lastAnalyticsT > 0.04;
+      return moving;
     }
 
     const sy = window.scrollY * 0.012;
@@ -314,8 +352,7 @@
     }
     const y = window.scrollY;
     const vh = window.innerHeight;
-    const top = film.offsetTop;
-    if (y + vh < top || y > top + film.offsetHeight) return;
+    if (y + vh < metrics.filmTop || y > metrics.filmTop + metrics.filmH) return;
     const rect = film.getBoundingClientRect();
     const raw = (vh * 0.75 - rect.top) / (vh * 0.57);
     const p = Math.min(1, Math.max(0, raw));
@@ -805,13 +842,18 @@
      ------------------------------------------------------------------ */
   if (finePointer && !reduceMotion) {
     $$("[data-magnetic]").forEach((el) => {
+      let rect = null;
+      el.addEventListener("pointerenter", () => {
+        rect = el.getBoundingClientRect();
+      });
       el.addEventListener("pointermove", (e) => {
-        const r = el.getBoundingClientRect();
-        const x = (e.clientX - (r.left + r.width / 2)) * 0.18;
-        const y = (e.clientY - (r.top + r.height / 2)) * 0.18;
+        if (!rect) rect = el.getBoundingClientRect();
+        const x = (e.clientX - (rect.left + rect.width / 2)) * 0.18;
+        const y = (e.clientY - (rect.top + rect.height / 2)) * 0.18;
         el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
       });
       el.addEventListener("pointerleave", () => {
+        rect = null;
         el.style.transform = "";
       });
     });
@@ -842,38 +884,65 @@
   $("#year").textContent = String(new Date().getFullYear());
 
   /* ------------------------------------------------------------------
-     rAF loops — scroll work and mouse work stay separate
+     One rAF pump — scroll work and mouse work share a frame
      ------------------------------------------------------------------ */
-  let ticking = false;
-  let envTicking = false;
+  let pumping = false;
+  let needScrollWork = true;
+  let needEnvWork = false;
 
-  function tick() {
-    ticking = false;
-    onHeaderScroll();
-    filmMorph();
-    const keepServices = servicesFrame();
-    const keepNight = nightStep();
-    const keepEnv = envStep();
-    if (keepNight || keepServices || keepEnv) kickTick();
+  function pump() {
+    pumping = false;
+    const doScroll = needScrollWork;
+    const doEnv = needEnvWork;
+    needScrollWork = false;
+    needEnvWork = false;
+
+    if (doScroll) {
+      if (!metrics.svcH) measureMetrics();
+      onHeaderScroll();
+      const y = window.scrollY;
+      const vh = window.innerHeight;
+      const metricsReady = metrics.svcH > 0;
+      if (!metricsReady || nearRange(metrics.filmTop, metrics.filmH, 0)) filmMorph();
+      const nearSvc = !metricsReady || nearRange(metrics.svcTop, metrics.svcH, 0);
+      let keepServices = false;
+      if (nearSvc) keepServices = servicesFrame();
+      else if (hsActive) {
+        resetServicesMotion();
+        hsActive = false;
+      }
+      const nearNight = !metricsReady || nearRange(metrics.nightTop, metrics.nightH, vh);
+      const pastNight = metricsReady && y + vh * 0.62 >= metrics.nightTop;
+      let keepNight = false;
+      if (nearNight || nearSvc || !pastNight) keepNight = nightStep();
+      else if (nightVal > 0.002) keepNight = nightStep();
+      else setNightIn(true);
+      if (keepServices || keepNight) needScrollWork = true;
+    }
+
+    if (doEnv || doScroll) {
+      const keepEnv = envStep();
+      if (lastAnalyticsT > 0.04) updateAnalyticsParallax();
+      if (keepEnv) needEnvWork = true;
+    }
+
+    if (needScrollWork || needEnvWork) kickPump();
   }
 
-  function envTick() {
-    envTicking = false;
-    const keepEnv = envStep();
-    if (lastAnalyticsT > 0.04) updateAnalyticsParallax();
-    if (keepEnv) kickEnv();
+  function kickPump() {
+    if (pumping) return;
+    pumping = true;
+    requestAnimationFrame(pump);
   }
 
   function kickTick() {
-    if (ticking) return;
-    ticking = true;
-    requestAnimationFrame(tick);
+    needScrollWork = true;
+    kickPump();
   }
 
   function kickEnv() {
-    if (envTicking) return;
-    envTicking = true;
-    requestAnimationFrame(envTick);
+    needEnvWork = true;
+    kickPump();
   }
 
   window.addEventListener("scroll", kickTick, { passive: true });
@@ -881,6 +950,7 @@
     "resize",
     () => {
       layoutDirty = true;
+      measureMetrics();
       kickTick();
     },
     { passive: true }
@@ -888,13 +958,12 @@
   if (document.fonts?.ready) {
     document.fonts.ready.then(() => {
       layoutDirty = true;
+      measureMetrics();
       kickTick();
     });
   }
 
-  onHeaderScroll();
-  filmMorph();
-  nightStep();
-  servicesFrame();
   runSplash();
+  measureMetrics();
+  kickPump();
 })();
