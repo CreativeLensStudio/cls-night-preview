@@ -1187,11 +1187,6 @@ html.is-night .type-hold-title {
 }
 
 @media (min-width: 901px) {
-  .type-hold-pin,
-  .services-head {
-    transition: opacity 0.38s ease;
-  }
-
   html:not(.is-type-landed) .services-head {
     opacity: 0;
     pointer-events: none;
@@ -1200,6 +1195,10 @@ html.is-night .type-hold-title {
   html.is-type-landed .type-hold-pin {
     opacity: 0;
     pointer-events: none;
+  }
+
+  html.is-type-landed .type-hold-title {
+    opacity: 0;
   }
 }
 
@@ -1241,7 +1240,7 @@ html.is-night .type-hold-title {
 }
 
 .services-head h2 {
-  font-size: clamp(1.65rem, 2.9vw, 2.55rem);
+  font-size: clamp(1.9rem, 2.66vw, 3.45rem);
   font-weight: 800;
   text-align: right;
   white-space: nowrap;

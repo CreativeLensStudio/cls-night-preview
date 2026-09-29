@@ -267,25 +267,15 @@
       return;
     }
     /* Position docks early; scale keeps going after it's in place. */
-    const dockAt = 0.55;
+    const dockAt = 0.46;
     const move = Math.min(1, p / dockAt);
-    const moveE = 1 - Math.pow(1 - move, 1.2);
-    /* Ease scale so the last bit settles softly instead of slamming. */
-    const scaleE = 1 - Math.pow(1 - p, 1.35);
+    const moveE = move * move * (3 - 2 * move);
+    const scaleE = p * p * (3 - 2 * p);
     const endScale = Math.min(1, typeRest.w / typeNatW);
     const scale = 1 - (1 - endScale) * scaleE;
     const top = typeStart.y + (typeRest.y - typeStart.y) * moveE;
     const startRightEdge = typeStart.x + typeNatW;
-    let endRightEdge = typeRest.x + typeRest.w;
-    if (servicesTitle && moveE > 0.85) {
-      const live = servicesTitle.getBoundingClientRect();
-      if (live.width > 2) {
-        endRightEdge = live.right;
-        typeRest.w = live.width;
-        typeRest.x = live.left;
-        typeRest.right = Math.max(0, window.innerWidth - live.right);
-      }
-    }
+    const endRightEdge = typeRest.x + typeRest.w;
     const rightEdge = startRightEdge + (endRightEdge - startRightEdge) * moveE;
     const left = rightEdge - typeNatW * scale;
     const opsz = Math.round(96 - (96 - 48) * scaleE);
@@ -300,6 +290,20 @@
     typeHoldTitle.style.transformOrigin = "left top";
     typeHoldTitle.style.transform = `scale(${scale.toFixed(3)})`;
     typeHoldTitle.style.fontVariationSettings = `"opsz" ${opsz}, "wdth" 100`;
+  }
+
+  function setTypeBlend(progress) {
+    const head = document.querySelector(".services-head");
+    const pin = typeHold ? typeHold.querySelector(".type-hold-pin") : null;
+    if (!head || !pin) return;
+    const blend = Math.min(1, Math.max(0, (progress - 0.93) / 0.07));
+    if (blend <= 0.001) {
+      head.style.opacity = "";
+      pin.style.opacity = "";
+      return;
+    }
+    pin.style.opacity = (1 - blend).toFixed(3);
+    head.style.opacity = blend.toFixed(3);
   }
 
   function typeHoldStep() {
@@ -329,35 +333,24 @@
     }
 
     const total = Math.max(1, typeHold.offsetHeight - vh);
-    const raw = Math.min(1, Math.max(0, -rect.top / total));
-    if (!typeNatW || typeNatW < 2 || raw < 0.22) measureTypeLayout();
-    else if (servicesTop < vh * 1.35) measureTypeRest();
+    if (!typeNatW || typeNatW < 2) measureTypeLayout();
+    else measureTypeRest();
 
     /*
-      1) Empty-space hold: move into place + most of the shrink
-      2) Approach cards: keep shrinking while docking over the first card
-      3) Pinned settle: a little more scroll shrinks the last bit
-      4) Then hand off — cards may scrub
+      One continuous scroll from the empty-space hold through the pinned
+      settle. No phase handoff, so the scale never jumps.
     */
-    const holdEnd = 0.58;
-    const approachEnd = 0.78;
-    const holdP = Math.min(1, Math.max(0, (raw - 0.22) / 0.78));
-    const settlePx = servicesSettlePx();
-    const pinnedScroll = Math.max(0, -servicesTop);
-    const settleDone = servicesTop <= 2 && pinnedScroll >= settlePx - 1;
+    const y = window.scrollY;
+    const start = typeHold.offsetTop + total * 0.18;
+    const end = (servicesEl ? servicesEl.offsetTop : start) + servicesSettlePx();
+    const progress = Math.min(1, Math.max(0, (y - start) / Math.max(1, end - start)));
+    const settleDone = progress >= 0.999 && servicesTop <= 2;
+    setTypeBlend(progress);
 
-    let progress;
-    if (raw < 1 && rect.bottom > 0) {
-      progress = holdP * holdEnd;
-    } else if (servicesTop > 2) {
-      const approach = 1 - Math.min(1, Math.max(0, servicesTop / vh));
-      progress = holdEnd + (approachEnd - holdEnd) * approach;
-    } else if (!settleDone) {
-      const settle = Math.min(1, pinnedScroll / Math.max(1, settlePx));
-      const settleE = 1 - Math.pow(1 - settle, 1.25);
-      progress = approachEnd + (1 - approachEnd) * settleE;
-    } else {
-      progress = 1;
+    if (y + vh < typeHold.offsetTop) {
+      setTypeLanded(false);
+      clearTypeHoldFixed();
+      return false;
     }
 
     if (settleDone) {
@@ -1127,7 +1120,7 @@
       }
       const nearType = !metricsReady || nearRange(metrics.typeTop, metrics.typeH, vh);
       let keepType = false;
-      if (nearType || !metrics.typeH || (!typeLanded && nearRange(metrics.svcTop, metrics.svcH, vh))) {
+      if (nearType || !metrics.typeH || nearRange(metrics.svcTop, metrics.svcH, vh)) {
         keepType = typeHoldStep();
       }
       const nearSvc = !metricsReady || nearRange(metrics.svcTop, metrics.svcH, 0);
