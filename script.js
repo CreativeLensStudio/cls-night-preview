@@ -13,7 +13,12 @@
   const body = document.body;
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-  const desktop = () => window.matchMedia("(min-width: 901px)").matches;
+  const desktopQuery = window.matchMedia("(min-width: 901px)");
+  let isDesktop = desktopQuery.matches;
+  desktopQuery.addEventListener("change", (e) => {
+    isDesktop = e.matches;
+    layoutDirty = true;
+  });
 
   /* ------------------------------------------------------------------
      Splash — blades draw, then iris opens onto the page
@@ -79,8 +84,13 @@
   const navToggle = $("#nav-toggle");
   const menu = $("#menu");
 
+  let headerScrolled = false;
+
   function onHeaderScroll() {
-    header.classList.toggle("scrolled", window.scrollY > 24);
+    const next = window.scrollY > 24;
+    if (next === headerScrolled) return;
+    headerScrolled = next;
+    header.classList.toggle("scrolled", next);
   }
 
   function setMenu(open) {
@@ -166,12 +176,32 @@
     return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
   }
 
+  let lastNightOpacity = -1;
+
   function nightStep() {
-    if (!nightZone || !nightVeil) return Math.abs(nightVal) > 0.001;
-    const rect = nightZone.getBoundingClientRect();
-    const cap = $(".film-caption")?.getBoundingClientRect();
+    if (!nightZone || !nightVeil) return false;
+    const y = window.scrollY;
     const vh = window.innerHeight;
-    const capTop = cap ? cap.top : rect.top + rect.height * 0.55;
+    const top = nightZone.offsetTop;
+    const bottom = top + nightZone.offsetHeight;
+    if (y + vh < top - vh || y > bottom + vh * 0.5) {
+      if (nightVal > 0.002) {
+        nightVal = 0;
+        if (lastNightOpacity !== 0) {
+          lastNightOpacity = 0;
+          nightVeil.style.opacity = "0";
+        }
+        if (nightOn) {
+          nightOn = false;
+          root.classList.remove("is-night");
+        }
+      }
+      return false;
+    }
+
+    const rect = nightZone.getBoundingClientRect();
+    const cap = $(".film-caption");
+    const capTop = cap ? cap.getBoundingClientRect().top : rect.top + rect.height * 0.55;
 
     let target = 0;
     if (reduceMotion) {
@@ -192,7 +222,11 @@
 
     nightVal += (target - nightVal) * (reduceMotion ? 1 : 0.12);
     if (Math.abs(target - nightVal) < 0.002) nightVal = target;
-    nightVeil.style.opacity = nightVal.toFixed(3);
+    const op = Number(nightVal.toFixed(3));
+    if (op !== lastNightOpacity) {
+      lastNightOpacity = op;
+      nightVeil.style.opacity = String(op);
+    }
 
     const shouldNight = nightVal > 0.42;
     if (shouldNight !== nightOn) {
@@ -203,7 +237,7 @@
   }
 
   function envStep() {
-    if (reduceMotion || !envLayers.length) return false;
+    if (reduceMotion || !envLayers.length || nightOn || analyticsOn) return false;
     env.x += (env.tx - env.x) * 0.08;
     env.y += (env.ty - env.y) * 0.08;
     const sy = window.scrollY * 0.012;
@@ -223,7 +257,7 @@
         if (e.pointerType && e.pointerType !== "mouse") return;
         env.tx = (e.clientX / window.innerWidth - 0.5) * 2;
         env.ty = (e.clientY / window.innerHeight - 0.5) * 2;
-        kickTick();
+        kickEnv();
       },
       { passive: true }
     );
@@ -232,7 +266,7 @@
       () => {
         env.tx = 0;
         env.ty = 0;
-        kickTick();
+        kickEnv();
       },
       { passive: true }
     );
@@ -246,15 +280,18 @@
   let lastClip = "";
 
   function filmMorph() {
-    if (!film || !stage || reduceMotion || !desktop()) {
+    if (!film || !stage || reduceMotion || !isDesktop) {
       if (stage && lastClip) {
         stage.style.clipPath = "";
         lastClip = "";
       }
       return;
     }
-    const rect = film.getBoundingClientRect();
+    const y = window.scrollY;
     const vh = window.innerHeight;
+    const top = film.offsetTop;
+    if (y + vh < top || y > top + film.offsetHeight) return;
+    const rect = film.getBoundingClientRect();
     const raw = (vh * 0.75 - rect.top) / (vh * 0.57);
     const p = Math.min(1, Math.max(0, raw));
     const eased = 1 - Math.pow(1 - p, 2.4);
@@ -349,11 +386,15 @@
   const analyticsVeil = $("#analytics-veil");
   const avScene = $("#av-scene");
   let analyticsOn = false;
+  let lastAnalyticsT = -1;
 
   function setAnalyticsChrome(t) {
     if (!analyticsVeil) return;
     const amt = Math.min(1, Math.max(0, t));
+    if (Math.abs(amt - lastAnalyticsT) < 0.008) return;
+    lastAnalyticsT = amt;
     analyticsVeil.style.opacity = amt.toFixed(3);
+    analyticsVeil.classList.toggle("is-live", amt > 0.04);
     const on = amt > 0.4;
     if (on !== analyticsOn) {
       analyticsOn = on;
@@ -362,7 +403,7 @@
   }
 
   function updateAnalyticsParallax() {
-    if (!avScene || reduceMotion) return;
+    if (!avScene || reduceMotion || lastAnalyticsT < 0.04) return;
     const rx = env.y * -7.5;
     const ry = env.x * 9.5;
     const tx = env.x * 38;
@@ -375,9 +416,10 @@
     play = 0;
     vel = 0;
     track.style.transform = "";
-    panels.forEach((panel) => {
+    panels.forEach((panel, i) => {
       panel.style.transform = "";
       panel.style.opacity = "";
+      panelKeys[i] = "";
     });
     setAnalyticsChrome(0);
     if (avScene) avScene.style.transform = "";
@@ -385,11 +427,21 @@
     laneLock = 0;
   }
 
+  const panelKeys = ["", "", "", ""];
+
   function servicesFrame() {
     const rect = services.getBoundingClientRect();
     const vh = window.innerHeight;
 
-    if (!desktop() || reduceMotion) {
+    if (rect.bottom < 0 || rect.top > vh) {
+      if (hsActive) {
+        resetServicesMotion();
+        hsActive = false;
+      }
+      return false;
+    }
+
+    if (!isDesktop || reduceMotion) {
       if (hsActive) {
         resetServicesMotion();
         hsActive = false;
@@ -484,7 +536,7 @@
       const eased = u * u * (3 - 2 * u);
       shift = centerThird + (centerLast - centerThird) * eased;
     }
-    track.style.transform = `translate3d(${(-shift).toFixed(2)}px, 0, 0)`;
+    track.style.transform = `translate3d(${(-shift).toFixed(1)}px, 0, 0)`;
 
     const idx = Math.min(span, Math.round(pos));
     if (idx !== lastIndex) {
@@ -504,10 +556,13 @@
       const t = Math.min(1, Math.abs(pos - i));
       const s = t * t * (3 - 2 * t);
       const scale = 1 - 0.32 * s;
-      const y = 42 * s;
+      const y = (42 * s) | 0;
       const opacity = 1 - 0.2 * s;
-      panels[i].style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(4)})`;
-      panels[i].style.opacity = opacity.toFixed(3);
+      const key = `${scale.toFixed(3)}|${y}|${opacity.toFixed(2)}`;
+      if (panelKeys[i] === key) continue;
+      panelKeys[i] = key;
+      panels[i].style.transform = `translate3d(0, ${y}px, 0) scale(${scale.toFixed(3)})`;
+      panels[i].style.opacity = opacity.toFixed(2);
     }
 
     return (
@@ -750,23 +805,37 @@
   $("#year").textContent = String(new Date().getFullYear());
 
   /* ------------------------------------------------------------------
-     Single rAF loop
+     rAF loops — scroll work and mouse work stay separate
      ------------------------------------------------------------------ */
   let ticking = false;
+  let envTicking = false;
+
   function tick() {
     ticking = false;
     onHeaderScroll();
     filmMorph();
     const keepServices = servicesFrame();
     const keepNight = nightStep();
+    if (keepNight || keepServices) kickTick();
+  }
+
+  function envTick() {
+    envTicking = false;
     const keepEnv = envStep();
-    if (keepNight || keepEnv || keepServices) kickTick();
+    if (lastAnalyticsT > 0.04) updateAnalyticsParallax();
+    if (keepEnv) kickEnv();
   }
 
   function kickTick() {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(tick);
+  }
+
+  function kickEnv() {
+    if (envTicking) return;
+    envTicking = true;
+    requestAnimationFrame(envTick);
   }
 
   window.addEventListener("scroll", kickTick, { passive: true });
