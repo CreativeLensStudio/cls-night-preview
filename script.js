@@ -215,9 +215,11 @@
       setTypeLanded(false);
       return;
     }
-    const move = Math.min(1, p / 0.5);
+    const move = Math.min(1, p / 0.58);
     const moveE = 1 - Math.pow(1 - move, 1.15);
-    const scaleE = 1 - Math.pow(1 - p, 1.05);
+    /* Mostly finished shrinking by the time it docks over the card. */
+    const scaleP = Math.min(1, p / 0.7);
+    const scaleE = 1 - Math.pow(1 - scaleP, 1.35);
     const endScale = typeRest.w / typeNatW;
     const scale = 1 - (1 - endScale) * scaleE;
     /* Origin is right-top, so scale alone handles the horizontal settle. */
@@ -254,8 +256,8 @@
     }
     const total = Math.max(1, typeHold.offsetHeight - vh);
     const raw = Math.min(1, Math.max(0, -rect.top / total));
-    if (!typeNatW || typeNatW < 2 || raw < 0.1) measureTypeLayout();
-    const progress = Math.min(1, Math.max(0, (raw - 0.1) / 0.9));
+    if (!typeNatW || typeNatW < 2 || raw < 0.22) measureTypeLayout();
+    const progress = Math.min(1, Math.max(0, (raw - 0.22) / 0.78));
     applyTypeHold(progress);
     return progress > 0 && progress < 1;
   }
