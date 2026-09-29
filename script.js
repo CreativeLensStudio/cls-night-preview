@@ -215,7 +215,7 @@
       setTypeLanded(false);
       return;
     }
-    const move = Math.min(1, p / 0.58);
+    const move = Math.min(1, p / 0.5);
     const moveE = 1 - Math.pow(1 - move, 1.15);
     const scaleE = 1 - Math.pow(1 - p, 1.05);
     const endScale = typeRest.w / typeNatW;
@@ -254,8 +254,8 @@
     }
     const total = Math.max(1, typeHold.offsetHeight - vh);
     const raw = Math.min(1, Math.max(0, -rect.top / total));
-    if (!typeNatW || typeNatW < 2 || raw < 0.22) measureTypeLayout();
-    const progress = Math.min(1, Math.max(0, (raw - 0.22) / 0.78));
+    if (!typeNatW || typeNatW < 2 || raw < 0.1) measureTypeLayout();
+    const progress = Math.min(1, Math.max(0, (raw - 0.1) / 0.9));
     applyTypeHold(progress);
     return progress > 0 && progress < 1;
   }
