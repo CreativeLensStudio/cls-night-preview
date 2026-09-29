@@ -182,6 +182,7 @@
     const vh = window.innerHeight;
     const top = nightZone.offsetTop;
     const bottom = top + nightZone.offsetHeight;
+    const pastNight = y + vh * 0.62 >= top;
     if (y + vh < top - vh || y > bottom + vh * 0.5) {
       if (nightVal > 0.002) {
         nightVal = 0;
@@ -193,8 +194,8 @@
           nightOn = false;
           root.classList.remove("is-night");
         }
-        root.classList.remove("is-night-in");
       }
+      root.classList.toggle("is-night-in", pastNight);
       return false;
     }
 
@@ -232,7 +233,7 @@
       nightOn = shouldNight;
       root.classList.toggle("is-night", nightOn);
     }
-    root.classList.toggle("is-night-in", nightVal > 0.04);
+    root.classList.toggle("is-night-in", nightVal > 0.04 || pastNight);
     return Math.abs(target - nightVal) > 0.002;
   }
 
