@@ -69,12 +69,76 @@ body {
   z-index: 0;
   pointer-events: none;
   opacity: 0;
+  overflow: hidden;
+  perspective: 1400px;
   transform: translateZ(0);
   will-change: opacity;
-  background:
-    radial-gradient(ellipse 90% 70% at 78% 35%, #5a7fa3 0%, transparent 58%),
-    radial-gradient(ellipse 60% 50% at 12% 85%, #2a3d4f 0%, transparent 62%),
-    #35516b;
+  background: #2c455c;
+}
+
+.av-scene {
+  position: absolute;
+  inset: -18%;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.av-plane,
+.av-orb {
+  position: absolute;
+  pointer-events: none;
+}
+
+.av-plane-a {
+  width: 78vmax;
+  height: 42vmax;
+  left: -16%;
+  top: 18%;
+  border-radius: 2.5rem;
+  background: linear-gradient(135deg, rgba(232, 238, 244, 0.18), rgba(90, 127, 163, 0.06));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  transform: translate3d(-8%, 0, -220px) rotateX(22deg) rotateY(-28deg);
+}
+
+.av-plane-b {
+  width: 56vmax;
+  height: 56vmax;
+  right: -14%;
+  top: -12%;
+  border-radius: 3rem;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(53, 81, 107, 0.1));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  transform: translate3d(6%, 4%, -90px) rotateY(18deg) rotateX(-8deg);
+}
+
+.av-plane-c {
+  width: 48vmax;
+  height: 28vmax;
+  left: 18%;
+  bottom: -8%;
+  border-radius: 2rem;
+  background: linear-gradient(180deg, rgba(20, 32, 44, 0.35), rgba(20, 32, 44, 0.05));
+  transform: translate3d(0, 0, 40px) rotateX(64deg);
+}
+
+.av-orb-a {
+  width: 36vmax;
+  height: 36vmax;
+  right: 8%;
+  top: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(180, 208, 232, 0.32), transparent 68%);
+  transform: translateZ(-40px);
+}
+
+.av-orb-b {
+  width: 28vmax;
+  height: 28vmax;
+  left: 6%;
+  bottom: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(90, 127, 163, 0.4), transparent 70%);
+  transform: translateZ(70px);
 }
 
 .page {
@@ -128,7 +192,7 @@ html.is-analytics .site-header.scrolled {
 }
 
 html.is-analytics .env {
-  opacity: 0.28;
+  opacity: 0;
 }
 
 ::selection {
@@ -1124,7 +1188,9 @@ body.ready .hero .line-inner {
 .panel-4 {
   background: #e7eef5;
   color: #12161c;
-  transform-origin: 88% 50%;
+  align-self: center;
+  width: min(72vw, 960px);
+  height: min(61svh, 560px);
 }
 
 .panel-4::before {
@@ -1310,7 +1376,7 @@ html.is-analytics .services-progress {
   font-variant-numeric: tabular-nums;
   opacity: 0;
   transform: translate3d(0, 6vh, 0);
-  transition: opacity 0.7s var(--ease-out), transform 0.9s var(--ease-out);
+  transition: opacity 0.9s var(--ease-out), transform 1.2s var(--ease-out);
 }
 
 .stat.is-in .stat-num {
@@ -1937,7 +2003,8 @@ html.is-analytics .services-progress {
   .crew-card,
   .crew-caption,
   .hero .line-inner,
-  .stat-num {
+  .stat-num,
+  .panel-4 {
     opacity: 1 !important;
     transform: none !important;
     filter: none !important;
@@ -1952,6 +2019,7 @@ html.is-analytics .services-progress {
 
   .night-veil,
   .analytics-veil { display: none; }
+  .av-scene { transform: none !important; }
 
   .film-stage { clip-path: inset(0 var(--gutter) round 2rem) !important; }
 

@@ -277,8 +277,77 @@
   let lastIndex = -1;
   let play = 0;
   let vel = 0;
+  let lastSnapped = false;
+  let snapDir = 0;
+  let snapTo = 1;
+  let snapStart = 0;
+  let snapFrom = 0;
+  let snapDuration = 1200;
+  let lastTarget = 0;
+  let laneLock = 0;
+  let layoutDirty = true;
+  const layout = {
+    maxShift: 0,
+    destBack: 2 / 3,
+    destForward: 1,
+    centerLast: 0,
+    centerThird: 0,
+    lane: 1 / 3,
+    armFwd: 0.8,
+    armBack: 0.9,
+    leaveLane: 0.64,
+  };
+
+  function measureServices() {
+    const span = Math.max(1, panels.length - 1);
+    const last = panels[3];
+    const third = panels[2];
+    const pin = last?.closest(".services-pin");
+    const pad = pin ? parseFloat(getComputedStyle(pin).paddingLeft) || 0 : 0;
+    const maxShift = Math.max(0, track.scrollWidth - window.innerWidth);
+    const centerOf = (panel) =>
+      Math.max(0, pad + panel.offsetLeft - (window.innerWidth - panel.offsetWidth) / 2);
+    layout.maxShift = maxShift;
+    layout.centerLast = last ? centerOf(last) : maxShift;
+    layout.centerThird = third ? centerOf(third) : maxShift * (2 / span);
+    layout.destForward = 1;
+    layout.destBack = maxShift > 0 ? Math.min(0.98, layout.centerThird / maxShift) : 2 / span;
+    layout.lane = Math.max(0.05, layout.destForward - layout.destBack);
+    layout.armFwd = layout.destBack + layout.lane * 0.3;
+    layout.armBack = layout.destBack + layout.lane * 0.7;
+    layout.leaveLane = layout.destBack - 0.025;
+    layoutDirty = false;
+  }
+
+  function releaseLastSnap() {
+    lastSnapped = false;
+    snapDir = 0;
+    snapStart = 0;
+    snapFrom = 0;
+    snapDuration = 1200;
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function snapMsFromPace(speed, remain) {
+    const ratio = Math.min(2.4, Math.max(0.45, Math.abs(speed) / 0.005));
+    const dist = Math.min(1.2, Math.max(0.35, remain / 0.233));
+    return Math.max(480, Math.min(2000, (1200 * dist) / ratio));
+  }
+
+  function armSnap(dir, dest, from, speed) {
+    lastSnapped = true;
+    snapDir = dir;
+    snapTo = dest;
+    snapFrom = from;
+    snapStart = performance.now();
+    snapDuration = snapMsFromPace(speed, Math.abs(dest - from));
+  }
 
   const analyticsVeil = $("#analytics-veil");
+  const avScene = $("#av-scene");
   let analyticsOn = false;
 
   function setAnalyticsChrome(t) {
@@ -292,6 +361,16 @@
     }
   }
 
+  function updateAnalyticsParallax() {
+    if (!avScene || reduceMotion) return;
+    const rx = env.y * -7.5;
+    const ry = env.x * 9.5;
+    const tx = env.x * 38;
+    const ty = env.y * 24;
+    avScene.style.transform =
+      `rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg) translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0)`;
+  }
+
   function resetServicesMotion() {
     play = 0;
     vel = 0;
@@ -301,6 +380,9 @@
       panel.style.opacity = "";
     });
     setAnalyticsChrome(0);
+    if (avScene) avScene.style.transform = "";
+    releaseLastSnap();
+    laneLock = 0;
   }
 
   function servicesFrame() {
@@ -324,19 +406,86 @@
     const total = Math.max(1, rect.height - vh);
     const raw = -rect.top / total;
     const target = Math.min(1, Math.max(0, raw));
+    const span = Math.max(1, panels.length - 1);
+    if (layoutDirty) measureServices();
+    const {
+      destForward,
+      destBack,
+      armFwd,
+      armBack,
+      leaveLane,
+      lane,
+      centerThird,
+      centerLast,
+    } = layout;
 
-    vel = vel * 0.8 + (target - play) * 0.075;
-    play += vel;
-    if (Math.abs(target - play) < 0.0002 && Math.abs(vel) < 0.0002) {
-      play = target;
-      vel = 0;
+    const targetDelta = target - lastTarget;
+    lastTarget = target;
+    const pace = Math.max(Math.abs(vel), Math.abs(targetDelta));
+
+    if (target < leaveLane) {
+      releaseLastSnap();
+      laneLock = 0;
     }
 
-    const maxShift = Math.max(0, track.scrollWidth - window.innerWidth);
-    track.style.transform = `translate3d(${(-play * maxShift).toFixed(2)}px, 0, 0)`;
+    if (lastSnapped) {
+      if (snapDir > 0 && targetDelta < -0.004 && target < armBack) {
+        armSnap(-1, destBack, play, pace);
+      } else if (snapDir < 0 && targetDelta > 0.004 && target > armFwd) {
+        armSnap(1, destForward, play, pace);
+      }
+    }
 
-    const span = Math.max(1, panels.length - 1);
-    const pos = play * span;
+    if (lastSnapped) {
+      const t = Math.min(1, (performance.now() - snapStart) / Math.max(80, snapDuration));
+      play = snapFrom + (snapTo - snapFrom) * easeOutCubic(t);
+      vel = 0;
+      if (t >= 1) {
+        play = snapTo;
+        laneLock = snapDir;
+        releaseLastSnap();
+      }
+    } else if (laneLock === 1) {
+      play = destForward;
+      vel = 0;
+      if (target < armBack && targetDelta < -0.0004) {
+        armSnap(-1, destBack, play, pace);
+      }
+    } else if (laneLock === -1) {
+      play = destBack;
+      vel = 0;
+      if (target > armFwd && targetDelta > 0.0004) {
+        armSnap(1, destForward, play, pace);
+      }
+    } else {
+      vel = vel * 0.8 + (target - play) * 0.075;
+      play += vel;
+      if (Math.abs(target - play) < 0.0002 && Math.abs(vel) < 0.0002) {
+        play = target;
+        vel = 0;
+      }
+
+      if (play > armFwd && target > armFwd && vel >= 0 && play < 0.97) {
+        armSnap(1, destForward, play, pace);
+      }
+    }
+
+    const pos =
+      play <= destBack
+        ? destBack > 0
+          ? (play / destBack) * 2
+          : 0
+        : 2 + (play - destBack) / lane;
+    let shift;
+    if (play <= destBack) {
+      shift = destBack > 0 ? (play / destBack) * centerThird : 0;
+    } else {
+      const u = Math.min(1, (play - destBack) / lane);
+      const eased = u * u * (3 - 2 * u);
+      shift = centerThird + (centerLast - centerThird) * eased;
+    }
+    track.style.transform = `translate3d(${(-shift).toFixed(2)}px, 0, 0)`;
+
     const idx = Math.min(span, Math.round(pos));
     if (idx !== lastIndex) {
       lastIndex = idx;
@@ -349,28 +498,23 @@
     else if (raw > 1) analyticsT = Math.max(0, 1 - (raw - 1) / 0.35);
     else analyticsT = Math.min(1, Math.max(0, (pos - 2.05) / 0.85));
     setAnalyticsChrome(analyticsT);
+    updateAnalyticsParallax();
 
     for (let i = 0; i < panels.length; i++) {
       const t = Math.min(1, Math.abs(pos - i));
       const s = t * t * (3 - 2 * t);
-      if (i === 3) {
-        const scale = 1 - 0.46 * s;
-        const x = 70 * s;
-        const y = -30 * s;
-        const rot = 14 * s;
-        panels[i].style.transform =
-          `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotateY(${(-rot).toFixed(2)}deg) scale(${scale.toFixed(4)})`;
-        panels[i].style.opacity = (1 - 0.05 * s).toFixed(3);
-      } else {
-        const scale = 1 - 0.32 * s;
-        const y = 42 * s;
-        const opacity = 1 - 0.2 * s;
-        panels[i].style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(4)})`;
-        panels[i].style.opacity = opacity.toFixed(3);
-      }
+      const scale = 1 - 0.32 * s;
+      const y = 42 * s;
+      const opacity = 1 - 0.2 * s;
+      panels[i].style.transform = `translate3d(0, ${y.toFixed(1)}px, 0) scale(${scale.toFixed(4)})`;
+      panels[i].style.opacity = opacity.toFixed(3);
     }
 
-    return Math.abs(target - play) > 0.0002 || Math.abs(vel) > 0.0002;
+    return (
+      Math.abs(target - play) > 0.0002 ||
+      Math.abs(vel) > 0.0002 ||
+      lastSnapped
+    );
   }
 
   /* ------------------------------------------------------------------
@@ -626,7 +770,20 @@
   }
 
   window.addEventListener("scroll", kickTick, { passive: true });
-  window.addEventListener("resize", kickTick, { passive: true });
+  window.addEventListener(
+    "resize",
+    () => {
+      layoutDirty = true;
+      kickTick();
+    },
+    { passive: true }
+  );
+  if (document.fonts?.ready) {
+    document.fonts.ready.then(() => {
+      layoutDirty = true;
+      kickTick();
+    });
+  }
 
   onHeaderScroll();
   filmMorph();
