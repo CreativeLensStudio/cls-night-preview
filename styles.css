@@ -1355,6 +1355,7 @@ body.ready .hero .line-inner {
   font-size: 0.8rem;
   letter-spacing: 0.14em;
   font-variant-numeric: tabular-nums;
+  opacity: 0;
 }
 
 .services-ticks {

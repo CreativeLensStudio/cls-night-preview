@@ -169,48 +169,60 @@
   const servicesTitle = $("#services-title");
   const servicesProgress = $(".services-progress");
   const filmCaption = $(".film-caption");
-  const TYPE_SETTLE = 0.15;
+  /* First ~18% of services scroll: big title alone, then cards rise + title docks. */
+  const TYPE_SETTLE = 0.18;
   const metrics = { nightTop: 0, nightH: 0, filmTop: 0, filmH: 0, svcTop: 0, svcH: 0 };
   let lastTypeTf = "";
   let typeMaxScale = 3.4;
-  let typeRestH = 36;
   let typeRestX = 0;
   let typeRestY = 0;
   let typeStartX = 0;
   let typeStartY = 0;
+  let cardParkY = 520;
 
   function measureTypeScale() {
     if (!servicesTitle || !isDesktop) return;
     const prev = servicesTitle.style.transform;
+    const trackPrev = track ? track.style.transform : "";
     servicesTitle.style.transform = "none";
+    if (track) track.style.transform = "translate3d(0, 0, 0)";
     const w = Math.max(1, servicesTitle.offsetWidth);
-    typeRestH = Math.max(24, servicesTitle.offsetHeight);
     const t = servicesTitle.getBoundingClientRect();
     const panel = document.querySelector("[data-panel]");
     const vw = window.innerWidth;
+    const vh = window.innerHeight;
     if (panel) {
       const p = panel.getBoundingClientRect();
-      const overlayW = Math.min(p.width - 72, vw * 0.86);
-      typeMaxScale = Math.min(5.2, Math.max(2.8, overlayW / w));
-      typeStartX = p.right - 36 - t.right;
-      typeStartY = p.top + Math.min(40, p.height * 0.06) - t.top;
+      typeMaxScale = Math.min(4.8, Math.max(2.6, (vw * 0.72) / w));
+      /* Start: large type mid-viewport, right-weighted like the reference. */
+      typeStartX = p.right - 48 - t.right;
+      typeStartY = vh * 0.42 - t.top;
+      /* Rest: just above top-right of the first card. */
       typeRestX = p.right - 36 - t.right;
-      typeRestY = p.top - 20 - t.bottom;
+      typeRestY = p.top - 22 - t.bottom;
+      cardParkY = Math.max(vh * 0.55, vh - p.top + 48);
     } else {
-      typeMaxScale = Math.min(4.4, Math.max(2.5, (vw * 0.86) / w));
+      typeMaxScale = Math.min(4.4, Math.max(2.5, (vw * 0.72) / w));
       typeStartX = 0;
-      typeStartY = window.innerHeight * 0.22;
+      typeStartY = vh * 0.28;
+      typeRestX = 0;
+      typeRestY = 0;
+      cardParkY = vh * 0.7;
     }
     servicesTitle.style.transform = prev;
+    if (track) track.style.transform = trackPrev;
   }
 
-  function applyTypeSettle(settle, vh) {
+  function applyTypeSettle(settle) {
     if (!servicesTitle) return;
-    const held = Math.min(1, Math.max(0, (settle - 0.14) / 0.86));
-    const e = 1 - Math.pow(1 - held, 1.85);
-    const scale = typeMaxScale - (typeMaxScale - 1) * e;
-    const x = typeStartX + (typeRestX - typeStartX) * e;
-    const y = typeStartY + (typeRestY - typeStartY) * e;
+    const t = Math.min(1, Math.max(0, settle));
+    /* Position docks earlier; scale keeps going after it arrives. */
+    const move = Math.min(1, t / 0.72);
+    const moveE = 1 - Math.pow(1 - move, 1.55);
+    const scaleE = 1 - Math.pow(1 - t, 1.35);
+    const scale = typeMaxScale - (typeMaxScale - 1) * scaleE;
+    const x = typeStartX + (typeRestX - typeStartX) * moveE;
+    const y = typeStartY + (typeRestY - typeStartY) * moveE;
     const next = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale3d(${scale.toFixed(3)}, ${scale.toFixed(3)}, 1)`;
     if (next === lastTypeTf) return;
     lastTypeTf = next;
@@ -572,7 +584,7 @@
         resetServicesMotion();
         hsActive = false;
       }
-      if (isDesktop && !reduceMotion && rect.top > vh) applyTypeSettle(0, vh);
+      if (isDesktop && !reduceMotion && rect.top > vh) applyTypeSettle(0);
       return false;
     }
 
@@ -582,6 +594,7 @@
         hsActive = false;
       }
       if (servicesTitle) servicesTitle.style.transform = "";
+      if (track) track.style.transform = "";
       if (!reduceMotion && panels[3]) {
         const r = panels[3].getBoundingClientRect();
         const inView = r.top < vh * 0.72 && r.bottom > vh * 0.28;
@@ -595,13 +608,15 @@
     const total = Math.max(1, rect.height - vh);
     const raw = -rect.top / total;
     const settle = raw <= 0 ? 0 : Math.min(1, raw / TYPE_SETTLE);
-    const enter = 1 - Math.pow(1 - settle, 1.7);
+    /* Cards rise with the title travel; title keeps shrinking after it docks. */
+    const cardIn = Math.min(1, Math.max(0, (settle - 0.12) / 0.58));
+    const cardE = 1 - Math.pow(1 - cardIn, 1.45);
     if (layoutDirty) {
       measureServices();
       measureTypeScale();
     }
-    applyTypeSettle(settle, vh);
-    const progOp = enter.toFixed(3);
+    applyTypeSettle(settle);
+    const progOp = cardE.toFixed(3);
     if (servicesProgress && servicesProgress.style.opacity !== progOp) {
       servicesProgress.style.opacity = progOp;
     }
@@ -707,9 +722,14 @@
       const dist = Math.abs(pos - i);
       const t = Math.min(1, dist);
       const s = t * t * (3 - 2 * t);
-      const scale = 1 - 0.32 * s;
-      const y = (42 * s) | 0;
-      const opacity = 1 - 0.2 * s;
+      let scale = 1 - 0.32 * s;
+      let y = (42 * s) | 0;
+      let opacity = 1 - 0.2 * s;
+      if (settle < 0.999) {
+        y += ((1 - cardE) * cardParkY) | 0;
+        opacity *= cardE;
+        scale *= 0.92 + 0.08 * cardE;
+      }
       const key = `${scale.toFixed(3)}|${y}|${opacity.toFixed(2)}`;
       if (panelKeys[i] === key) continue;
       panelKeys[i] = key;
