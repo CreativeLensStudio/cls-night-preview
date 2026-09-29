@@ -1229,6 +1229,18 @@ html.is-night .type-hold-title {
   font-variation-settings: "opsz" 48, "wdth" 100;
 }
 
+@media (min-width: 901px) {
+  #services-title.is-parked {
+    position: fixed;
+    left: auto;
+    margin: 0;
+    z-index: 30;
+    pointer-events: none;
+    width: max-content;
+    max-width: calc(100vw - 2 * var(--gutter));
+  }
+}
+
 .services-track {
   display: flex;
   flex: 1;

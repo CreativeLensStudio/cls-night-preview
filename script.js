@@ -167,6 +167,7 @@
   const nightZone = $("#night-zone");
   const servicesEl = $("#services");
   const servicesTitle = $("#services-title");
+  const titleHome = servicesTitle ? servicesTitle.parentElement : null;
   const servicesProgress = $(".services-progress");
   const filmCaption = $(".film-caption");
   const typeHold = $("#type-hold");
@@ -180,29 +181,46 @@
   }
 
   function titleFocusStep() {
-    if (!servicesTitle) return false;
-    if (reduceMotion) {
-      servicesTitle.style.opacity = "";
-      servicesTitle.style.filter = "";
+    if (!servicesTitle || !servicesEl || !titleHome) return false;
+    if (!isDesktop || reduceMotion) {
+      releaseParkedTitle();
       return false;
     }
-    const head = servicesTitle.closest(".services-head");
-    if (!head) return false;
-    const top = head.getBoundingClientRect().top;
+    if (servicesTitle.parentElement !== document.body) {
+      document.body.appendChild(servicesTitle);
+    }
+    servicesTitle.classList.add("is-parked");
+    const headRect = titleHome.getBoundingClientRect();
+    const top = getComputedStyle(titleHome).top || "88px";
+    const right = Math.max(0, window.innerWidth - headRect.right);
+    servicesTitle.style.top = top;
+    servicesTitle.style.right = `${right.toFixed(1)}px`;
+
+    const rect = servicesEl.getBoundingClientRect();
     const vh = window.innerHeight;
-    const restTop = parseFloat(getComputedStyle(head).top) || 88;
-    const delta = top - restTop;
     let amount = 1;
-    if (delta > 2) amount = 1 - Math.min(1, delta / (vh * 0.48));
-    else if (delta < -2) amount = 1 - Math.min(1, -delta / (vh * 0.4));
+    if (rect.bottom < 0 || rect.top > vh) amount = 0;
+    else if (rect.top > 0) amount = 1 - Math.min(1, rect.top / (vh * 0.62));
+    else if (rect.bottom < vh) amount = Math.min(1, Math.max(0, rect.bottom / (vh * 0.5)));
     const eased = amount * amount * (3 - 2 * amount);
-    const blur = (1 - eased) * 14;
-    const next = `${eased.toFixed(3)}|${blur.toFixed(1)}`;
+    const blur = (1 - eased) * 16;
+    const next = `${top}|${right.toFixed(1)}|${eased.toFixed(3)}|${blur.toFixed(1)}`;
     if (next === lastTitleFocus) return eased > 0.004 && eased < 0.996;
     lastTitleFocus = next;
     servicesTitle.style.opacity = eased.toFixed(3);
     servicesTitle.style.filter = blur < 0.3 ? "none" : `blur(${blur.toFixed(1)}px)`;
     return eased > 0.004 && eased < 0.996;
+  }
+
+  function releaseParkedTitle() {
+    if (!servicesTitle || !titleHome) return;
+    servicesTitle.classList.remove("is-parked");
+    servicesTitle.style.top = "";
+    servicesTitle.style.right = "";
+    servicesTitle.style.opacity = "";
+    servicesTitle.style.filter = "";
+    if (servicesTitle.parentElement !== titleHome) titleHome.appendChild(servicesTitle);
+    lastTitleFocus = "";
   }
 
   function measureMetrics() {
