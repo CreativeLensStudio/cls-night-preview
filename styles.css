@@ -1151,25 +1151,6 @@ body.ready .hero .line-inner {
   z-index: 5;
 }
 
-.type-hold-frame {
-  position: absolute;
-  top: calc(var(--header) + 1.25rem);
-  right: calc(var(--gutter) * 0.55);
-  left: calc(var(--gutter) * 0.55);
-  height: calc(100svh - var(--header) - 1.25rem - 4.5vh);
-  pointer-events: none;
-  opacity: 0.55;
-  background:
-    linear-gradient(var(--paper-night), var(--paper-night)) left top / 1.35rem 1px no-repeat,
-    linear-gradient(var(--paper-night), var(--paper-night)) left top / 1px 1.35rem no-repeat,
-    linear-gradient(var(--paper-night), var(--paper-night)) right top / 1.35rem 1px no-repeat,
-    linear-gradient(var(--paper-night), var(--paper-night)) right top / 1px 1.35rem no-repeat,
-    linear-gradient(var(--paper-night), var(--paper-night)) left bottom / 1.35rem 1px no-repeat,
-    linear-gradient(var(--paper-night), var(--paper-night)) left bottom / 1px 1.35rem no-repeat,
-    linear-gradient(var(--paper-night), var(--paper-night)) right bottom / 1.35rem 1px no-repeat,
-    linear-gradient(var(--paper-night), var(--paper-night)) right bottom / 1px 1.35rem no-repeat;
-}
-
 .type-hold-pin {
   position: absolute;
   top: 0;
@@ -1217,66 +1198,18 @@ html.is-night .type-hold-title {
 
 .type-hold-note {
   position: absolute;
+  top: calc(var(--header) + 1.75rem);
   left: var(--gutter);
-  bottom: calc(30svh + 8vh);
-  width: min(34rem, 46vw);
+  width: min(22rem, 28vw);
   z-index: 2;
   color: var(--paper-night);
 }
 
-.type-hold-kicker {
-  margin: 0 0 0.9rem;
-  font-family: var(--display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--orange);
-}
-
-.type-hold-lead {
-  margin: 0;
-  max-width: 16ch;
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: clamp(1.45rem, 2.1vw, 2rem);
-  letter-spacing: -0.045em;
-  line-height: 1.02;
-}
-
 .type-hold-body {
-  margin: 1rem 0 0;
-  max-width: 38rem;
+  margin: 0;
   font-size: 1.05rem;
   line-height: 1.5;
-  color: rgba(240, 236, 228, 0.72);
-}
-
-.type-hold-facts {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.15rem 0;
-  list-style: none;
-  margin: 1.35rem 0 0;
-  padding: 0.9rem 0 0;
-  border-top: 1px solid rgba(240, 236, 228, 0.18);
-  font-family: var(--display);
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(240, 236, 228, 0.58);
-}
-
-.type-hold-facts li + li::before {
-  content: "";
-  display: inline-block;
-  width: 1px;
-  height: 0.65em;
-  margin: 0 0.85rem;
-  background: rgba(240, 236, 228, 0.35);
-  vertical-align: -0.05em;
+  color: rgba(240, 236, 228, 0.78);
 }
 
 .services {
@@ -2089,7 +2022,6 @@ html.is-analytics .services-progress {
     padding: clamp(4rem, 10vh, 6rem) 0;
   }
 
-  .type-hold-frame,
   .type-hold-pin {
     display: none;
   }
@@ -2277,7 +2209,6 @@ html.is-analytics .services-progress {
     padding: 4rem 0;
   }
 
-  .type-hold-frame,
   .type-hold-pin {
     display: none;
   }
