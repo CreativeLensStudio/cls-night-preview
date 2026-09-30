@@ -1146,14 +1146,17 @@ body.ready .hero .line-inner {
 
 .type-hold {
   position: relative;
-  height: 100vh;
-  height: 100svh;
+  height: 130vh;
+  height: 130svh;
   z-index: 5;
 }
 
 .type-hold-frame {
   position: absolute;
-  inset: calc(var(--header) + 1.25rem) calc(var(--gutter) * 0.55) 4.5vh;
+  top: calc(var(--header) + 1.25rem);
+  right: calc(var(--gutter) * 0.55);
+  left: calc(var(--gutter) * 0.55);
+  height: calc(100svh - var(--header) - 1.25rem - 4.5vh);
   pointer-events: none;
   opacity: 0.55;
   background:
@@ -1169,7 +1172,11 @@ body.ready .hero .line-inner {
 
 .type-hold-pin {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  height: 100svh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1211,7 +1218,7 @@ html.is-night .type-hold-title {
 .type-hold-note {
   position: absolute;
   left: var(--gutter);
-  bottom: 8vh;
+  bottom: calc(30svh + 8vh);
   width: min(34rem, 46vw);
   z-index: 2;
   color: var(--paper-night);
