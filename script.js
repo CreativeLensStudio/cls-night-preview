@@ -183,7 +183,7 @@
     const title = typeHold ? typeHold.querySelector(".type-hold-title") : null;
     const eyebrow = typeHold ? typeHold.querySelector(".eyebrow") : null;
     if (!typeHold || !title) return false;
-    if (!isDesktop || reduceMotion) {
+    if (!isDesktop) {
       title.style.opacity = "";
       title.style.filter = "";
       if (eyebrow) {
@@ -194,19 +194,19 @@
     }
     const rect = title.getBoundingClientRect();
     const vh = window.innerHeight;
-    const band = vh * 0.28;
+    const t = (rect.top + rect.height * 0.5) / vh;
     let amount = 0;
-    if (rect.bottom > 0 && rect.top < vh) {
-      const enter = (vh - rect.bottom) / band;
-      const leave = rect.top / band;
+    if (t > 0 && t < 1) {
+      const enter = (1 - t) / 0.5;
+      const leave = t / 0.42;
       amount = Math.min(1, Math.max(0, Math.min(enter, leave)));
     }
     const eased = amount * amount * (3 - 2 * amount);
-    const blur = (1 - eased) * 16;
+    const blur = (1 - eased) * 22;
     const next = `${eased.toFixed(3)}|${blur.toFixed(1)}`;
     if (next === lastTitleFocus) return eased > 0.004 && eased < 0.996;
     lastTitleFocus = next;
-    const filter = blur < 0.3 ? "none" : `blur(${blur.toFixed(1)}px)`;
+    const filter = blur < 0.4 ? "none" : `blur(${blur.toFixed(1)}px)`;
     title.style.opacity = eased.toFixed(3);
     title.style.filter = filter;
     if (eyebrow) {
@@ -970,10 +970,7 @@
         filmMorph();
       }
       const nearType = !metricsReady || nearRange(metrics.typeTop, metrics.typeH, vh);
-      let keepType = false;
-      if (nearType || nearRange(metrics.svcTop, metrics.svcH, vh)) {
-        keepType = titleFocusStep();
-      }
+      const keepType = titleFocusStep();
       const nearSvc = !metricsReady || nearRange(metrics.svcTop, metrics.svcH, 0);
       let keepServices = false;
       if (nearSvc) keepServices = servicesFrame();
