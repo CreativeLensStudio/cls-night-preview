@@ -1209,21 +1209,26 @@ html.is-night .type-hold-title {
 
 .type-hold-line {
   position: absolute;
-  top: 43%;
+  top: 21.5%;
   margin: 0;
-  width: 100%;
-  transform: translateY(-50%);
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+  transform: none;
   font-family: "Instrument Serif", Georgia, serif;
   font-size: clamp(1.2rem, 1.45vw, 1.85rem);
-  font-weight: 400;
+  font-weight: 600;
+  font-synthesis: weight;
   font-style: italic;
   letter-spacing: -0.02em;
   line-height: 1.15;
-  color: rgba(240, 236, 228, 0.9);
+  color: rgba(240, 236, 228, 0.92);
+  -webkit-text-stroke: 0.35px currentColor;
 }
 
 .type-hold-line-2 {
   top: 82%;
+  transform: translateY(-50%);
 }
 
 .services {
