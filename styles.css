@@ -1198,18 +1198,32 @@ html.is-night .type-hold-title {
 
 .type-hold-note {
   position: absolute;
-  top: calc(var(--header) + 1.75rem);
-  left: var(--gutter);
-  width: min(22rem, 28vw);
+  left: 12vw;
+  top: 0;
+  width: 20vw;
+  height: 100vh;
+  height: 100svh;
   z-index: 2;
-  color: var(--paper-night);
+  pointer-events: none;
 }
 
-.type-hold-body {
+.type-hold-line {
+  position: absolute;
+  top: 43%;
   margin: 0;
-  font-size: 1.05rem;
-  line-height: 1.5;
-  color: rgba(240, 236, 228, 0.78);
+  width: 100%;
+  transform: translateY(-50%);
+  font-family: "Instrument Serif", Georgia, serif;
+  font-size: clamp(1.2rem, 1.45vw, 1.85rem);
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: rgba(240, 236, 228, 0.9);
+}
+
+.type-hold-line-2 {
+  top: 82%;
 }
 
 .services {
@@ -2029,7 +2043,17 @@ html.is-analytics .services-progress {
   .type-hold-note {
     position: static;
     width: min(36rem, calc(100% - 2 * var(--gutter)));
+    height: auto;
     margin-inline: auto;
+  }
+
+  .type-hold-line,
+  .type-hold-line-2 {
+    position: static;
+    top: auto;
+    width: auto;
+    transform: none;
+    margin: 0 0 0.85rem;
   }
 
   .services-head {
@@ -2216,7 +2240,17 @@ html.is-analytics .services-progress {
   .type-hold-note {
     position: static;
     width: min(36rem, calc(100% - 2 * var(--gutter)));
+    height: auto;
     margin-inline: auto;
+  }
+
+  .type-hold-line,
+  .type-hold-line-2 {
+    position: static;
+    top: auto;
+    width: auto;
+    transform: none;
+    margin: 0 0 0.85rem;
   }
   .services-head {
     opacity: 1 !important;
