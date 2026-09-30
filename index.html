@@ -22,7 +22,7 @@
       href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;800&family=Instrument+Sans:wght@400;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="styles.css?v=fadewide" />
+    <link rel="stylesheet" href="styles.css?v=studiofield" />
   </head>
   <body class="is-loading">
     <a class="skip-link" href="#main">Skip to content</a>
@@ -212,11 +212,25 @@
           </div>
         </section>
 
-        <!-- Empty hold: big disciplines line sits alone before the cards. -->
-        <section class="type-hold" id="type-hold" aria-hidden="true">
+        <!-- Empty field: the disciplines line, then a place to talk about the business. -->
+        <section class="type-hold" id="type-hold" aria-labelledby="type-hold-title">
+          <div class="type-hold-frame" aria-hidden="true"></div>
           <div class="type-hold-pin">
             <p class="eyebrow">What we manage</p>
             <p class="type-hold-title" id="type-hold-title">Four disciplines. One studio.</p>
+          </div>
+          <div class="type-hold-note">
+            <p class="type-hold-kicker">The business</p>
+            <p class="type-hold-lead">We learn the trade before we picture it.</p>
+            <p class="type-hold-body">
+              Creative Lens Studio is one crew in Aberdeen. The film, the website, and the advertising stay in the
+              same hands, so a customer meets the same business in the ad, on the page, and in the room.
+            </p>
+            <ul class="type-hold-facts">
+              <li>Aberdeen, WA</li>
+              <li>Film, web, ads</li>
+              <li>One studio</li>
+            </ul>
           </div>
         </section>
         </div>
@@ -440,6 +454,6 @@
       <span>Play</span>
     </div>
 
-    <script src="script.js?v=fadewide" defer></script>
+    <script src="script.js?v=studiofield" defer></script>
   </body>
 </html>
