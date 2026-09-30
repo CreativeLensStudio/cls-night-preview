@@ -1217,13 +1217,11 @@ html.is-night .type-hold-title {
   transform: none;
   font-family: "Instrument Serif", Georgia, serif;
   font-size: clamp(1.2rem, 1.45vw, 1.85rem);
-  font-weight: 600;
-  font-synthesis: weight;
+  font-weight: 400;
   font-style: italic;
   letter-spacing: -0.02em;
   line-height: 1.15;
-  color: rgba(240, 236, 228, 0.92);
-  -webkit-text-stroke: 0.35px currentColor;
+  color: rgba(240, 236, 228, 0.9);
 }
 
 .type-hold-line-2 {
